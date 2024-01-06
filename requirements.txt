@@ -1,0 +1,17 @@
+requests
+tqdm
+matplotlib
+numpy
+pandas
+scipy
+xarray
+netCDF4
+h5netcdf
+dask
+torch == 2.1.0
+torchdiffeq
+torch-cluster
+torch-scatter
+torch-sparse
+torch-spline-conv
+git+https://github.com/patrick-kidger/torchcubicspline.git
