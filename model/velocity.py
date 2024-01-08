@@ -65,8 +65,8 @@ def compute_delta(tensor):
 
 def optimize_velocity(tens, tens_delta, kernel, device, velocity_fitting_epoch=100, lr=2, regularization_coeff=10e-7):
     batch_size, *shape = tens.shape
-    v_x = torch.nn.Parameter(torch.randn(*tens.shape, device=device))
-    v_y = torch.nn.Parameter(torch.randn(*tens.shape, device=device))
+    v_x = torch.randn(*tens.shape, device=device, requires_grad=True)
+    v_y = torch.randn(*tens.shape, device=device, requires_grad=True)
 
     criterion = torch.nn.MSELoss()
     optimizer = torch.optim.Adam([v_x, v_y], lr=lr)
@@ -87,15 +87,17 @@ def optimize_velocity(tens, tens_delta, kernel, device, velocity_fitting_epoch=1
         final_x = torch.matmul(v_x_kernel, kernel_v_x).mean()
         final_y = torch.matmul(v_y_kernel, kernel_v_y).mean()
 
-        vel_loss = criterion(tens_delta, adv.squeeze(dim=1)) + regularization_coeff * (final_x + final_y)
+        vel_loss = criterion(tens_delta, adv) + regularization_coeff * (final_x + final_y)
         vel_loss.backward()
         optimizer.step()
 
     v_x, v_y = v_x.detach(), v_y.detach()
-    return torch.stack((v_x, v_y), dim=1).squeeze()
+    return torch.stack((v_x, v_y), dim=1)
+
 
 def get_batch_velocity(batch, kernel, device):
     deltas = batch.apply(compute_delta, device=device)
     datas = batch.apply(lambda x: x[:, :, :, -1], device=device)
     keys = deltas.sorted_keys
-    return TensorDict({k: optimize_velocity(datas[k], deltas[k], kernel, device=device) for k in keys}, batch_size=len(batch))
+    return TensorDict({k: optimize_velocity(datas[k], deltas[k], kernel, device=device) for k in keys},
+                      batch_size=len(batch))
