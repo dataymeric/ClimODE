@@ -30,8 +30,10 @@ def loading_process(data_path, subfolders_list_path, constant_data_path,
 
     # Add constants to the data
     constants = xr.open_dataset(data_path + constant_data_path)
+
     # keep only orography and land sea mask
-    constants = constants[['lsm', 'orography']]
+    from main import variables_static
+    constants = constants[variables_static]
     merged_raw_data = xr.merge([merged_raw_data, constants])
 
     # log info
