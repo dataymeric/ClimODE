@@ -1,0 +1,42 @@
+default_language_version:
+  python: python3.11
+
+default_stages: [commit, push]
+
+exclude: ".idea|data|outputs|venv"
+
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: 'v4.5.0'
+  hooks:
+    - id: check-added-large-files
+      args: [ "--maxkb=700" ]
+    - id: check-yaml
+    - id: check-merge-conflict
+    - id: detect-private-key
+    - id: end-of-file-fixer
+    - id: requirements-txt-fixer
+    - id: trailing-whitespace
+- repo: https://github.com/adrienverge/yamllint.git
+  rev: 'v1.33.0'
+  hooks:
+    - id: yamllint
+      exclude: .pre-commit-config.yaml
+      stages: [commit, push, manual]
+      args: [--config-file=configs/.yamllint, --format=auto, --strict]
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  rev: 'v0.1.11'
+  hooks:
+    - id: ruff
+      args: &ruff_lint_args [--no-fix]
+    - id: ruff
+      stages: [manual]
+      args: &ruff_fix_args [--show-fixes, --fix]
+- repo: https://github.com/psf/black
+  rev: '23.12.1'
+  hooks:
+    - id: black
+      args: &black_lint_args [--verbose, --color, --check]
+    - id: black
+      stages: [manual]
+      args: &black_fix_args [--verbose, --color]
