@@ -1,0 +1,63 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyCompatibilityInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ourVersions">
+        <value>
+          <list size="5">
+            <item index="0" class="java.lang.String" itemvalue="3.11" />
+            <item index="1" class="java.lang.String" itemvalue="3.12" />
+            <item index="2" class="java.lang.String" itemvalue="3.13" />
+            <item index="3" class="java.lang.String" itemvalue="3.10" />
+            <item index="4" class="java.lang.String" itemvalue="3.9" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="27">
+            <item index="0" class="java.lang.String" itemvalue="box2d-py" />
+            <item index="1" class="java.lang.String" itemvalue="gymnasium" />
+            <item index="2" class="java.lang.String" itemvalue="swig" />
+            <item index="3" class="java.lang.String" itemvalue="numpy" />
+            <item index="4" class="java.lang.String" itemvalue="mazemdp" />
+            <item index="5" class="java.lang.String" itemvalue="gym" />
+            <item index="6" class="java.lang.String" itemvalue="bbrl_gym" />
+            <item index="7" class="java.lang.String" itemvalue="numba" />
+            <item index="8" class="java.lang.String" itemvalue="tbb" />
+            <item index="9" class="java.lang.String" itemvalue="pytest-runner" />
+            <item index="10" class="java.lang.String" itemvalue="pytest" />
+            <item index="11" class="java.lang.String" itemvalue="colorama" />
+            <item index="12" class="java.lang.String" itemvalue="mypy" />
+            <item index="13" class="java.lang.String" itemvalue="pre-commit" />
+            <item index="14" class="java.lang.String" itemvalue="hypothesis" />
+            <item index="15" class="java.lang.String" itemvalue="tqdm" />
+            <item index="16" class="java.lang.String" itemvalue="pandas" />
+            <item index="17" class="java.lang.String" itemvalue="tensorboard" />
+            <item index="18" class="java.lang.String" itemvalue="hydra-core" />
+            <item index="19" class="java.lang.String" itemvalue="seaborn" />
+            <item index="20" class="java.lang.String" itemvalue="opencv-python" />
+            <item index="21" class="java.lang.String" itemvalue="torchvision" />
+            <item index="22" class="java.lang.String" itemvalue="omegaconf" />
+            <item index="23" class="java.lang.String" itemvalue="matplotlib" />
+            <item index="24" class="java.lang.String" itemvalue="setuptools" />
+            <item index="25" class="java.lang.String" itemvalue="mujoco-py" />
+            <item index="26" class="java.lang.String" itemvalue="optuna" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="pyterrier.BatchRetrieve" />
+          <option value="pyterrier.DFIndexer" />
+          <option value="pyterrier.datasets" />
+          <option value="pyterrier.Experiment" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

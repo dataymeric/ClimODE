@@ -16,8 +16,8 @@ def get_constants(path):
         \[ \psi(c) = [\psi(h), \psi(w), \text{lsm}, \text{oro}] \]
     """
     constants = xr.open_mfdataset(path, combine='by_coords')
-    oro = torch.tensor(constants["orography"].values)[(None,)*2]
-    lsm = torch.tensor(constants["lsm"].values)[(None,)*2]
+    oro = torch.tensor(constants["orography"].values)[(None,) * 2]
+    lsm = torch.tensor(constants["lsm"].values)[(None,) * 2]
     lat2d = torch.tensor(constants['lat2d'].values)
     lon2d = torch.tensor(constants['lon2d'].values)
     return oro, lsm, lat2d, lon2d
