@@ -84,4 +84,8 @@ def loading_wb2(data_path, periods):
     max = raw_data_train.max()
     raw_data[variables_time_dependant] = (raw_data[variables_time_dependant] - min) / (max - min)
 
+    # log info
+    logging.info('Raw data loaded, merged and normalized')
+    logging.info('Raw data disk size: {} MiB'.format(raw_data.nbytes / 1e6))
+
     return raw_data

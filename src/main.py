@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import torch.utils.data
 
-from data.loading import loading_wb1
+from data.loading import loading_wb1, loading_wb2
 from data.processing import select_data
 from model.velocity import get_velocities, get_kernel
 
