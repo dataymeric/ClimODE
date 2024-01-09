@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 
 
-def loading_wb1(data_path, periods):
+def wb1(data_path, periods):
     subfolders_list_path = [
         "2m_temperature",
         "temperature_850",
@@ -33,29 +33,25 @@ def loading_wb1(data_path, periods):
     merged_raw_train_data = merged_raw_data.sel(time=periods["train"])
 
     # compute min and max
-    min = merged_raw_train_data.min()
-    max = merged_raw_train_data.max()
+    min_data = merged_raw_train_data.min()
+    max_data = merged_raw_train_data.max()
 
     # modify the data
-    merged_raw_data = (merged_raw_data - min) / (max - min)
+    merged_raw_data = (merged_raw_data - min_data) / (max_data - min_data)
 
     # Add constants to the data
     constants = xr.open_dataset(data_path + constant_data_path)
 
     # keep only orography and land sea mask
-    from main import variables_static
+    from src.main import variables_static
 
     constants = constants[variables_static]
     merged_raw_data = xr.merge([merged_raw_data, constants])
 
-    # log info
-    logging.info("Raw data loaded, merged and normalized")
-    logging.info("Raw data disk size: {} MiB".format(merged_raw_data.nbytes / 1e6))
-
     return merged_raw_data
 
 
-def loading_wb2(data_path, periods):
+def wb2(data_path, periods):
     dict_var = {
         "2m_temperature": "t2m",
         "temperature": "t",
@@ -80,20 +76,15 @@ def loading_wb2(data_path, periods):
     raw_data["z"] = raw_data["z"].sel(level=500)
     raw_data = raw_data.drop_vars("level")
 
-    from main import variables_time_dependant
+    from src.main import variables_time_dependant
 
     raw_data_variables = raw_data[variables_time_dependant]
 
     # compute min and max
     raw_data_train = raw_data_variables.sel(time=periods["train"])
-    min = raw_data_train.min()
-    max = raw_data_train.max()
-    raw_data[variables_time_dependant] = (raw_data[variables_time_dependant] - min) / (
-        max - min
-    )
-
-    # log info
-    logging.info("Raw data loaded, merged and normalized")
-    logging.info("Raw data disk size: {} MiB".format(raw_data.nbytes / 1e6))
+    min_data = raw_data_train.min()
+    max_data = raw_data_train.max()
+    updated_raw_data = raw_data_variables - min_data / (max_data - min_data)
+    raw_data[variables_time_dependant] = updated_raw_data
 
     return raw_data

@@ -2,7 +2,7 @@ from tensordict import TensorDict
 
 
 def select_data(data, periods):
-    from main import variables_time_dependant
+    from src.main import variables_time_dependant
 
     selected_data = {}
     for period_name, period in periods.items():

@@ -4,7 +4,8 @@ import os
 import pandas as pd
 import torch
 
-from data.loading import loading_wb2
+
+import data.loading as loading
 from data.processing import select_data
 from model.velocity import get_velocities, get_kernel
 
@@ -54,10 +55,13 @@ if __name__ == "__main__":
         k: pd.date_range(*p, freq=config["freq"])
         for (k, p) in config["periods"].items()
     }
-    # data = loading_wb1(config['data_path_wb1'], periods)
-    data = loading_wb2(config["data_path_wb2"], periods)
+    raw_data = loading.wb1(config["data_path_wb1"], periods)
+    # data = loading.wb2(config["data_path_wb2"], periods)
 
-    data_selected = select_data(data, periods)
+    logging.info("Raw data loaded, merged and normalized")
+    logging.info("Raw data disk size: {} MiB".format(raw_data.nbytes / 1e6))
 
-    kernel = get_kernel(data, config["vel"])
+    data_selected = select_data(raw_data, periods)
+
+    kernel = get_kernel(raw_data, config["vel"])
     data_velocities = get_velocities(data_selected, kernel, config)
