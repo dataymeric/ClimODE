@@ -1,8 +1,6 @@
+--find-links https://data.pyg.org/whl/torch-2.1.2+cpu.html
+## change cpu to cu121 for cuda 12.1 and so on
 dask
-#torch-cluster
-#torch-scatter
-#torch-sparse
-#torch-spline-conv
 git+https://github.com/patrick-kidger/torchcubicspline.git
 h5netcdf
 matplotlib
@@ -14,6 +12,10 @@ requests
 scipy
 tensordict
 torch
+torch-cluster
+torch-scatter
+torch-sparse
+torch-spline-conv
 torchdiffeq
 tqdm
 xarray
