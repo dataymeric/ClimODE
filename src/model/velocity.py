@@ -4,6 +4,7 @@ import os
 import numpy as np
 import torch
 from tensordict import TensorDict
+from torch.utils.data import DataLoader
 from torchcubicspline import natural_cubic_spline_coeffs, NaturalCubicSpline
 
 
@@ -124,13 +125,13 @@ def fit_velocity(period_data, kernel, config):
     init_data = data_train.apply(lambda x: select_from_slice_for_batch(x, batch_size=config['bs']),
                                  batch_size=[init_data_batch_size])
 
-    dataloader = torch.utils.data.DataLoader(init_data, batch_size=config['vel']['bs'], shuffle=False,
-                                             collate_fn=lambda x: x, pin_memory=True)
+    dataloader = DataLoader(init_data,
+                            batch_size=config['vel']['bs'],
+                            shuffle=False,
+                            collate_fn=lambda x: x,
+                            pin_memory=True)
 
-    velocities: TensorDict = torch.cat([get_batch_velocity(batch, kernel, config['vel']) for batch in dataloader],
-                                       dim=0)
-
-    return velocities
+    return torch.cat([get_batch_velocity(batch, kernel, config['vel']) for batch in dataloader], dim=0)
 
 
 def get_hash(period_name, config):

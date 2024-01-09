@@ -24,7 +24,7 @@ config = {
     'data_path_wb2': 'data/1959-2023_01_10-6h-64x32_equiangular_conservative.zarr',
     'freq': '6H',
     'periods': {
-        'train': ('2015-11-01', '2015-12-31'),
+        'train': ('2006-01-01', '2015-12-31'),
         'val': ('2016-01-01', '2016-12-31'),
         'test': ('2017-01-01', '2018-12-31')
     },
@@ -32,7 +32,7 @@ config = {
         'rbf_alpha': 1.0,
         'stacking': 3,
         'bs': 50,
-        'fitting_epoch': 100,
+        'fitting_epoch': 200,
         'regul_coeff': 1e-7,
         'lr': 2,
         'device': gpu_device,
