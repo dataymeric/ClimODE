@@ -4,7 +4,7 @@ import xarray as xr
 
 def get_constants(path):
     """Get constant spatial and time features.
-    
+
     Parameters
     ----------
     path : string
@@ -15,9 +15,9 @@ def get_constants(path):
     (torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor)
         \[ \psi(c) = [\psi(h), \psi(w), \text{lsm}, \text{oro}] \]
     """
-    constants = xr.open_mfdataset(path, combine='by_coords')
+    constants = xr.open_mfdataset(path, combine="by_coords")
     oro = torch.tensor(constants["orography"].values)[(None,) * 2]
     lsm = torch.tensor(constants["lsm"].values)[(None,) * 2]
-    lat2d = torch.tensor(constants['lat2d'].values)
-    lon2d = torch.tensor(constants['lon2d'].values)
+    lat2d = torch.tensor(constants["lat2d"].values)
+    lon2d = torch.tensor(constants["lon2d"].values)
     return oro, lsm, lat2d, lon2d

@@ -62,11 +62,11 @@ if __name__ == "__main__":
             total_size = int(response.headers.get("content-length", 0))
             os.makedirs(os.path.dirname(tmp_download_path), exist_ok=True)
             with open(tmp_download_path, "wb") as file, tqdm(
-                    desc=filename,
-                    total=total_size,
-                    unit="B",
-                    unit_scale=True,
-                    unit_divisor=1024,
+                desc=filename,
+                total=total_size,
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
             ) as bar:
                 for data in response.iter_content(chunk_size=1024):
                     file.write(data)
