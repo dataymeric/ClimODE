@@ -6,6 +6,7 @@ import torch
 from tensordict import TensorDict
 from torch.utils.data import DataLoader
 from torchcubicspline import natural_cubic_spline_coeffs, NaturalCubicSpline
+from tqdm import tqdm
 
 
 def get_gauss_kernel(lat, lon, alpha):
@@ -151,10 +152,11 @@ def fit_velocity(period_data, kernel, config):
         pin_memory=True,
     )
 
-    return torch.cat(
-        [get_batch_velocity(batch, kernel, config["vel"]) for batch in dataloader],
-        dim=0,
-    )
+    velocities = []
+    for batch in tqdm(dataloader):
+        velocities.append(get_batch_velocity(batch, kernel, config["vel"]))
+
+    return torch.cat(velocities, dim=0)
 
 
 def get_hash(period_name, config):
