@@ -13,11 +13,11 @@ def get_constants(path):
     Returns
     -------
     (torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor)
-        \[ \psi(c) = [\psi(h), \psi(w), \text{lsm}, \text{oro}] \]
+    \[(h, w, lsm, oro)\]
     """
     constants = xr.open_mfdataset(path, combine="by_coords")
     oro = torch.tensor(constants["orography"].values)[(None,) * 2]
     lsm = torch.tensor(constants["lsm"].values)[(None,) * 2]
     lat2d = torch.tensor(constants["lat2d"].values)
     lon2d = torch.tensor(constants["lon2d"].values)
-    return oro, lsm, lat2d, lon2d
+    return oro, lsm, lat2d, lon2d # maybe les return dans le même sens que dans le papier ?
