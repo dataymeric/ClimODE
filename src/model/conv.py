@@ -26,7 +26,9 @@ def ConvLayer(dim_in, dim_out, config):
 
 
 class ResidualBlock(nn.Module):
-    """Pre-activation Residual Block. https://arxiv.org/pdf/1603.05027.pdf"""
+    """Pre-activation Residual Block. https://arxiv.org/pdf/1603.05027.pdf
+    $f_{conv}$
+    """
 
     def __init__(self, dim_in, dim_out, config):
         super().__init__()
@@ -51,7 +53,7 @@ class ResidualBlock(nn.Module):
         out = self.padding(out)
         out = self.conv1(out)
         out = self.norm1(out)
-    
+
         out = self.activation(out)
 
         # Second convolutional layer
@@ -62,3 +64,26 @@ class ResidualBlock(nn.Module):
         # Shortcut connection
         out = out + self.shortcut(x)
         return out
+
+
+class Climate_ResNet_2D(nn.Module):
+    def __init__(self, in_channels, layers_length, layers_hidden_size, config):
+        super().__init__()
+        layers_cnn = []
+        for length, hidden_size in zip(layers_length, layers_hidden_size):
+            layers_cnn = layers_cnn + self.make_layer(
+                in_channels, hidden_size, length, config
+            )
+            in_channels = hidden_size
+        self.layer_cnn = nn.Sequential(*layers_cnn)
+
+    @staticmethod
+    def make_layer(in_channels, out_channels, reps, config):
+        return [ResidualBlock(in_channels, out_channels, config)] + [
+            ResidualBlock(out_channels, out_channels, config)
+        ] * (reps - 1)
+
+    def forward(self, x):
+        x = x.float()
+        x = self.layer_cnn(x)
+        return x
