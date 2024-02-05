@@ -39,6 +39,11 @@ config = {
         "device": gpu_device,
     },
     "model": {
+        "emission_model":{
+            "in_channels":9+34, # err_in
+            "layers_length":[3, 2, 2],
+            "layers_hidden_size":[128, 64, 2 * 9] # 9 = out_types = len(paths_to_data)
+        },
         "norm_type": "batch",
         "n_res_blocks": [3, 2, 2],
         "kernel_size": 3,
