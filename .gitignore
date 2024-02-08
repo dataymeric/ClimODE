@@ -1,6 +1,7 @@
 # ADD PROJECT SPECIFIC STUFF HERE :
 
 data/*
+src/data/velocities/*
 
 
 ## NOT PROJECT SPECIFIC :
@@ -336,3 +337,4 @@ fabric.properties
 
 # Built Visual Studio Code Extensions
 *.vsix
+
