@@ -43,7 +43,7 @@ def wb1(data_path, periods):
     constants = xr.open_dataset(data_path + constant_data_path)
 
     # keep only orography and land sea mask
-    from src.main import variables_static
+    from main import variables_static
 
     constants = constants[variables_static]
     merged_raw_data = xr.merge([merged_raw_data, constants])

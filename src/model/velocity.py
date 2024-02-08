@@ -152,9 +152,9 @@ def fit_velocity(period_data, kernel, config):
         pin_memory=True,
     )
 
-    velocities = []
-    for batch in tqdm(dataloader):
-        velocities.append(get_batch_velocity(batch, kernel, config["vel"]))
+    velocities = [
+        get_batch_velocity(batch, kernel, config["vel"]) for batch in tqdm(dataloader)
+    ]
 
     return torch.cat(velocities, dim=0)
 
