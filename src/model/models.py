@@ -15,7 +15,7 @@ class Emission_model(nn.Module):
     def __init__(self, config, time_pos_embedding):
         super().__init__()
         self.sub_config = config["model"]["emission_model"]
-        self.model = Climate_ResNet_2D(
+        self.model = ClimateResNet2D(
             self.sub_config["in_channels"],
             self.sub_config["layers_length"],
             self.sub_config["layers_hidden_size"],

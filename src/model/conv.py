@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -67,7 +66,7 @@ class ResidualBlock(nn.Module):
         return out
 
 
-class Climate_ResNet_2D(nn.Module):
+class ClimateResNet2D(nn.Module):
     def __init__(self, in_channels, layers_length, layers_hidden_size, config):
         super().__init__()
         layers_cnn = []
@@ -88,6 +87,3 @@ class Climate_ResNet_2D(nn.Module):
         x = x.float()
         x = self.layer_cnn(x)
         return x
-
-
-
