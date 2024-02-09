@@ -1,13 +1,14 @@
 import logging
 import os
 
+import data.loading as loading
 import pandas as pd
 import torch
-
-
-import data.loading as loading
+from data.dataset import Forcasting_ERA5Dataset
 from data.processing import select_data
-from model.velocity import get_velocities, get_kernel
+from model.velocity import get_kernel, get_velocities
+from torch.utils.data import DataLoader
+from utils.loss import CustomGaussianNLLLoss
 
 variables_time_dependant = ["t2m", "t", "z", "u10", "v10"]
 variables_static = ["lsm", "orography"]
@@ -39,10 +40,14 @@ config = {
         "device": gpu_device,
     },
     "model": {
-        "emission_model":{
-            "in_channels":9+34, # err_in
-            "layers_length":[3, 2, 2],
-            "layers_hidden_size":[128, 64, 2 * 9] # 9 = out_types = len(paths_to_data)
+        "emission_model": {
+            "in_channels": 9 + 34,  # err_in
+            "layers_length": [3, 2, 2],
+            "layers_hidden_size": [
+                128,
+                64,
+                2 * 9,
+            ],  # 9 = out_types = len(paths_to_data)
         },
         "norm_type": "batch",
         "n_res_blocks": [3, 2, 2],
@@ -77,3 +82,8 @@ if __name__ == "__main__":
 
     kernel = get_kernel(raw_data, config["vel"])
     data_velocities = get_velocities(data_selected, kernel, config)
+
+    criterion = CustomGaussianNLLLoss()
+    data = torch.cat([t.unsqueeze(-1) for t in data_selected["train"].values()], dim=-1)
+    dataset = Forcasting_ERA5Dataset(data)
+    train_loader = DataLoader(dataset, batch_size=config["bs"], shuffle=True)
