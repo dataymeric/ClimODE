@@ -22,6 +22,7 @@ def get_day_and_season_embeddings(t):
         - Column 2: sin seasonal embedding
         - Column 3: cos seasonal embedding
     """
+    # étrange avec le fait que c'est des timesteps de 6h et pas de jours à voir
     day_in_years = t / 24  # 365 or 366
     hours_of_day = t % 24
     day_of_years = t // 24
@@ -38,36 +39,11 @@ def get_day_and_season_embeddings(t):
         ),
         dim=1,
     )
-    """
-    Ce qui est fait dans le code du papier est un peu différent à mon gout, à cause du - pi/2
-    t_emb = (t % 24).view(-1, 1, 1, 1, 1)
-    sin_t_emb = torch.sin(torch.pi * t_emb / 12 - torch.pi / 2)
-    cos_t_emb = torch.cos(torch.pi * t_emb / 12 - torch.pi / 2)
-    sin_seas_emb = torch.sin(torch.pi * t_emb / (12 * 365) - torch.pi / 2)
-    cos_seas_emb = torch.cos(torch.pi * t_emb / (12 * 365) - torch.pi / 2)
-    => cat 
-    
-    Attention, c'est un autre calcul qui est fait dans les embedding pour 
-    le PDE et la résolution de l'équation différentielle, ici on est dans noise_net_contrib()
-
-    t_emb = (
-        ((t * 100) % 24)
-        .view(1, 1, 1, 1)
-        .expand(ds.shape[0], 1, ds.shape[2], ds.shape[3])
-    )
-    sin_t_emb = torch.sin(torch.pi * t_emb / 12 - torch.pi / 2)
-    cos_t_emb = torch.cos(torch.pi * t_emb / 12 - torch.pi / 2)
-
-    sin_seas_emb = torch.sin(torch.pi * t_emb / (12 * 365) - torch.pi / 2)
-    cos_seas_emb = torch.cos(torch.pi * t_emb / (12 * 365) - torch.pi / 2)
-
-    day_emb = torch.cat([sin_t_emb, cos_t_emb], dim=1)
-    seas_emb = torch.cat([sin_seas_emb, cos_seas_emb], dim=1)
-    """
 
 
 def get_localisation_embeddings(lat, lon):
     """Get localisation embeddings.
+    It's what is done in the forward loop.
 
     Parameters
     ----------
