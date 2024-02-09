@@ -23,5 +23,5 @@ class Forcasting_ERA5Dataset(Dataset):
         x = self.data[index]
         # On prends les nb_timestep inclus (+1) time steps suivantes
         # sans inclure la donnée courante (+1)
-        y = self.data[index + 1 : index + self.nb_timestep + 1]
-        return x, y
+        # y_forcast = self.data[index + 1 : index + self.nb_timestep + 1]
+        return x
