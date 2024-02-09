@@ -1,14 +1,18 @@
 import logging
 import os
 
-import data.loading as loading
 import pandas as pd
 import torch
-from data.dataset import Forcasting_ERA5Dataset
-from data.processing import select_data
+from model.models import ClimODE
 from model.velocity import get_kernel, get_velocities
+from torch import optim
 from torch.utils.data import DataLoader
 from utils.loss import CustomGaussianNLLLoss
+
+import data.loading as loading
+from data.dataset import Forcasting_ERA5Dataset
+from data.embeddings import get_time_localisation_embeddings
+from data.processing import select_data
 
 variables_time_dependant = ["t2m", "t", "z", "u10", "v10"]
 variables_static = ["lsm", "orography"]
@@ -40,14 +44,27 @@ config = {
         "device": gpu_device,
     },
     "model": {
-        "emission_model": {
-            "in_channels": 9 + 34,  # err_in
+        "VelocityModel": {
+            "local": {
+                "in_channels": 30 + 34,  # 34 d'embeding, 30 = jsp
+                "layers_length": [5, 3, 2],
+                "layers_hidden_size": [128, 64, 2 * 5],
+                # 5 = out_types = len(paths_to_data)
+            },
+            "global": {
+                "in_channels": 30 + 34,
+                "out_channels": 2 * 5,
+            },
+            "gamma": 0.1,
+        },
+        "EmissionModel": {
+            "in_channels": 5 + 34,  # err_in ; 5 ou 9 ??? je sais plus faut vérif
             "layers_length": [3, 2, 2],
             "layers_hidden_size": [
                 128,
                 64,
-                2 * 9,
-            ],  # 9 = out_types = len(paths_to_data)
+                2 * 5,
+            ],  # 5 = out_types = len(paths_to_data)
         },
         "norm_type": "batch",
         "n_res_blocks": [3, 2, 2],
@@ -56,15 +73,13 @@ config = {
         "dropout": 0.1,
     },
     "bs": 8,
+    "max_epoch": 300,
+    "lr": 0.0005,
     "device": gpu_device,
 }
 
 if __name__ == "__main__":
     # check the script is executed within the parent directory
-    if not os.path.exists("src/main.py"):
-        raise RuntimeError(
-            "The script must be executed within the project root directory"
-        )
 
     logging.basicConfig(level=logging.INFO)
 
@@ -73,6 +88,7 @@ if __name__ == "__main__":
         for (k, p) in config["periods"].items()
     }
     raw_data = loading.wb1(config["data_path_wb1"], periods)
+    train_raw_data = raw_data.sel(time=periods["train"])
     # data = loading.wb2(config["data_path_wb2"], periods)
 
     logging.info("Raw data loaded, merged and normalized")
@@ -82,8 +98,27 @@ if __name__ == "__main__":
 
     kernel = get_kernel(raw_data, config["vel"])
     data_velocities = get_velocities(data_selected, kernel, config)
+    train_velocities = torch.cat(tuple(data_velocities["train"].values()), dim=1).view(
+        -1, 32, 64, 10
+    )  # (1826, 10, 32, 64) -> (1826, 32, 64, 10) pour compatibilité avec les futurs cat
 
-    criterion = CustomGaussianNLLLoss()
-    data = torch.cat([t.unsqueeze(-1) for t in data_selected["train"].values()], dim=-1)
-    dataset = Forcasting_ERA5Dataset(data)
+    train_data = torch.cat(
+        [t.unsqueeze(-1) for t in data_selected["train"].values()], dim=-1
+    )
+    dataset = Forcasting_ERA5Dataset(train_data)
     train_loader = DataLoader(dataset, batch_size=config["bs"], shuffle=True)
+
+    time_step = torch.Tensor(list(range(len(train_data))))
+    time_step = torch.arange(0, len(train_data), 1)
+    time_step = torch.Tensor([0, 1])
+    time_pos_embedding = get_time_localisation_embeddings(
+        time_step,
+        torch.tensor(train_raw_data["lat"].values),
+        torch.tensor(train_raw_data["lon"].values),
+        torch.tensor(train_raw_data["lsm"].values),
+        torch.tensor(train_raw_data["orography"].values),
+    ).float()  # float64 to float32 (important for conv) TODO
+    model = ClimODE(config, time_pos_embedding)
+    optimizer = optim.AdamW(model.parameters(), lr=config["lr"])
+    criterion = CustomGaussianNLLLoss()
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300)
