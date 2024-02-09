@@ -24,7 +24,7 @@ elif torch.backends.mps.is_available():
 config = {
     "data_path_wb1": "data/era5_data/",
     "data_path_wb2": "data/1959-2023_01_10-6h-64x32_equiangular_conservative.zarr",
-    "freq": "6H",
+    "freq": 6,  # In hours
     "periods": {
         "train": ("2006-01-01", "2015-12-31"),
         "val": ("2016-01-01", "2016-12-31"),
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     periods = {
-        k: pd.date_range(*p, freq=config["freq"])
+        k: pd.date_range(*p, freq=str(config["freq"]) + "H")
         for (k, p) in config["periods"].items()
     }
     raw_data = loading.wb1(config["data_path_wb1"], periods)
