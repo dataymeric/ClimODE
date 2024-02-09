@@ -98,8 +98,9 @@ def optimize_velocity(tens, tens_delta, kernel, config):
         )
         adv = transport + compression
 
-        kernel_v_x, kernel_v_y = v_x.view(batch_size, -1, 1), v_y.view(
-            batch_size, -1, 1
+        kernel_v_x, kernel_v_y = (
+            v_x.view(batch_size, -1, 1),
+            v_y.view(batch_size, -1, 1),
         )
 
         kernel = kernel[:batch_size]
@@ -162,7 +163,7 @@ def fit_velocity(period_data, kernel, config):
 def get_hash(period_name, config):
     internal_config = {"period_name": period_name}
     internal_config.update(config["vel"])
-    internal_config["freq"] = config["freq"]
+    internal_config["freq"] = str(config["freq"]) + "H"
     internal_config["interval"] = config["periods"][period_name]
     internal_config["bs"] = config["bs"]
     internal_config.pop("device")
