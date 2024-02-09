@@ -50,7 +50,6 @@ config = {
             ],  # 9 = out_types = len(paths_to_data)
         },
         "norm_type": "batch",
-        "n_res_blocks": [3, 2, 2],
         "kernel_size": 3,
         "stride": 1,
         "dropout": 0.1,
