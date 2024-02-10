@@ -26,9 +26,6 @@ class EmissionModel(nn.Module):
         t,
         x,
     ):
-        """
-        WIP, not tested yet.
-        """
         # ic(x.shape, self.time_pos_embedding.shape)  # [8, 5, 32, 64]
         original_x = x
         x = torch.cat([x, self.time_pos_embedding[t]], dim=-3)
@@ -82,8 +79,7 @@ class AttentionModel(nn.Module):
         )
 
     def forward(self, x):
-        """WIP
-
+        """
         Parameters
         ----------
         x : _type_
@@ -105,19 +101,6 @@ class AttentionModel(nn.Module):
         attention_beta = attention_beta.view(1, -1, 32, 64).contiguous()
         # ic(self.post_map(attention_beta).shape) # (1, 10, 32, 64)
         return self.post_map(attention_beta)
-        """
-        size = x.size()
-        x = x.float()
-        q, k, v = (
-            self.query(x).flatten(-2, -1),
-            self.key(x).flatten(-2, -1),
-            self.value(x).flatten(-2, -1),
-        )
-        beta = F.softmax(torch.bmm(q.transpose(1, 2), k), dim=1)
-        o = torch.bmm(v, beta.transpose(1, 2))
-        o = self.post_map(o.view(-1, self.out_ch, size[-2], size[-1]).contiguous())
-        return o
-        """
 
 
 class VelocityModel(nn.Module):
@@ -143,7 +126,7 @@ class VelocityModel(nn.Module):
 
     def forward(self, t, x):
         """
-        WIP, not tested yet.
+        OK
         Input must directly have all the parameters concatenated.
         x: shape: (15,32,64) -> (10, 32,64,10) + (5,32,64)
         """
@@ -203,7 +186,7 @@ class ClimODE(nn.Module):
 
     def forward(self, t, x):
         """
-        WIP, not tested yet.
+        OK
         """
 
         # Calcul of news timesteps
