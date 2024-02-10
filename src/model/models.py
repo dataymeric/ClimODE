@@ -193,11 +193,16 @@ class ClimODE(nn.Module):
         self.emission_model = EmissionModel(config, time_pos_embedding)
         self.time_pos_embedding = time_pos_embedding
 
-    def forward(self, t, x):
+    def forward(self, data, vel, t):
         """
         WIP, not tested yet.
 
-        # TODO: Add the initial condition as input
+        data torch.Size([12, 5, 32, 64])
+        vel torch.Size([12, 5, 2, 32, 64])
+
+        soit si odeint peut prendre un tuple on garde data et vel séparé sinon
+        on les concatène et on les sépare dans le forward de velocity_model
+
         """
 
         # Calcul of news timesteps

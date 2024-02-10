@@ -138,5 +138,5 @@ if __name__ == "__main__":
         # vel : torch.Size([12, 5, 2, 32, 64])
         # t : torch.Size([12]) # index à utiliser pour les embeddings
 
-        output = model(data, t)
+        output = model(data[:, 0], vel, t)
         break
