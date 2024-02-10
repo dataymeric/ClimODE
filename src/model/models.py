@@ -143,18 +143,16 @@ class VelocityModel(nn.Module):
         x: shape: (32, 64, 15) -> (32, 64, 10) + (32, 64, 5)
         """
 
-        # Obligé de cat avant puis uncat ici car odeint ne peut pas split ces param je pense
-        # pour le coup un tensors dict ici serait plus propre mais plus le temps
-        # Si on passe en (batch, timestep, année, ...,...), il faudra rajouter un :
-        past_velocity = x[:, :, :10]  # v in original code
-        past_velocity_x = past_velocity[:, :, :5]
-        past_velocity_y = past_velocity[:, :, 5:]
-        past_velocity_grad_x = torch.gradient(past_velocity_x, dim=-2)[0]
-        past_velocity_grad_y = torch.gradient(past_velocity_y, dim=-3)[0]
+        x_0, vel = x
 
-        x_0 = x[:, :, 10:]  # ds in original code
-        x_0_grad_x = torch.gradient(x_0, dim=-2)[0]  # sur la dim de la logitude (64)
-        x_0_grad_y = torch.gradient(x_0, dim=-3)[0]  # sur la dim de la latitude (32)
+        past_velocity_x = vel[:, :, 0]
+        past_velocity_y = vel[:, :, 1]
+
+        past_velocity_grad_x = torch.gradient(past_velocity_x, dim=-1)[0]
+        past_velocity_grad_y = torch.gradient(past_velocity_y, dim=-2)[0]
+
+        x_0_grad_x = torch.gradient(x_0, dim=-1)[0]
+        x_0_grad_y = torch.gradient(x_0, dim=-2)[0]
         nabla_u = torch.cat([x_0_grad_x, x_0_grad_y], dim=-1)  # (32,64,2*5)
 
         t_emb = t.view(1, 1, 1).expand(32, 64, 1)
@@ -173,7 +171,7 @@ class VelocityModel(nn.Module):
         x = x.view(1, 64, 32, 64)
         dv = self.local_model(x)
         dv += self.gamma * self.global_model(x)
-        dv = dv.squeeze().view(32, 64, -1)  # (32,64,10)
+        dv = dv.squeeze().view(32, 64, -1)  # (32, 64, 10)
 
         adv1 = past_velocity_x * x_0_grad_x + past_velocity_y * x_0_grad_y
         adv2 = x_0 * (past_velocity_grad_x + past_velocity_grad_y)
@@ -201,9 +199,11 @@ class ClimODE(nn.Module):
         vel torch.Size([12, 5, 2, 32, 64])
 
         soit si odeint peut prendre un tuple on garde data et vel séparé sinon
-        on les concatène et on les sépare dans le forward de velocity_model
+        on les concatène et on les sépare dans le forward de velocity_model comme tu avais fait
 
         """
+
+        x = (data, vel)
 
         # Calcul of news timesteps
         init_time = t[0].item() * self.freq
