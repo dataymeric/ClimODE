@@ -16,8 +16,8 @@ class Forcasting_ERA5Dataset(Dataset):
             Number of timestep to predict
         """
         # Load and preprocess your data here
-        self.data = dataset
-        self.velocities = velocities
+        self.data = dataset[:-1]
+        self.velocities = velocities[:-1]
 
         self.pred_length = pred_length
 
