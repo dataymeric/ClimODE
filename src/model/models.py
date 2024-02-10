@@ -134,19 +134,31 @@ class VelocityModel(nn.Module):
         # Obligé de cat avant puis uncat ici car odeint ne peut pas split ces param je pense
         # pour le coup un tensors dict ici serait plus propre mais plus le temps
         # Si on passe en (batch, timestep, année, ...,...), il faudra rajouter un :
-        past_velocity = x[:10]  # v in original code
-        past_velocity_x = past_velocity[:5]
-        past_velocity_y = past_velocity[5:]
-        past_velocity_grad_x = torch.gradient(past_velocity_x, dim=-2)[0]
-        past_velocity_grad_y = torch.gradient(past_velocity_y, dim=-3)[0]
 
-        x_0 = x[10:, :, :]  # ds in original code
+        (x_0, vel, t) = x
+
+        print(x_0.shape, vel.shape, t.shape)
+
+        past_velocity_x = vel[:, :, 0]
+        past_velocity_y = vel[:, :, 1]
+        past_velocity_grad_x = torch.gradient(past_velocity_x, dim=-1)[0]
+        past_velocity_grad_y = torch.gradient(past_velocity_y, dim=-2)[0]
+
         x_0_grad_x = torch.gradient(x_0, dim=-1)[0]  # sur la dim de la logitude (64)
         x_0_grad_y = torch.gradient(x_0, dim=-2)[0]  # sur la dim de la latitude (32)
-        nabla_u = torch.cat([x_0_grad_x, x_0_grad_y], dim=-3)  # (2*5,32,64)
+        nabla_u = torch.cat([x_0_grad_x, x_0_grad_y], dim=-3)  # (batch, 2*5,32,64)
 
-        t_emb = t.view(1, 1, 1).expand(1, 32, 64)
-        t = int(t.item()) * 100
+
+        # adapt following shape to generecity
+        t_emb = t.view(12, 1, 1, 1).expand(12, 1, 32, 64)
+
+        print(t_emb.shape)
+
+        print(t.dtype, t.shape)
+
+        time_pos_embedding = self.time_pos_embedding[t]
+
+        print(nabla_u.shape, time_pos_embedding.shape)
 
         x = torch.cat([t_emb, x, nabla_u, self.time_pos_embedding[t]], dim=-3)
         # Unsquueze for simulate a batch of 1
@@ -184,18 +196,17 @@ class ClimODE(nn.Module):
         self.emission_model = EmissionModel(config, time_pos_embedding)
         self.time_pos_embedding = time_pos_embedding
 
-    def forward(self, t, x):
+    def forward(self, data, vel, t):
         """
         OK
         """
 
-        # Calcul of news timesteps
-        init_time = t[0].item() * self.freq
-        final_time = t[-1].item() * self.freq
-        steps_val = final_time - init_time
         ode_t = 0.01 * torch.linspace(
-            init_time, final_time, steps=int(steps_val) + 1
+            0, 8, steps = 8
         ).to(self.device)  # Je sais pas pourquoi 0.01
+
+        x = (data, vel, t)
+
 
         # Solvings ODE
         x = odeint(self.velocity_model, x, ode_t, method="euler")

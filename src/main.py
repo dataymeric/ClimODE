@@ -95,8 +95,7 @@ if __name__ == "__main__":
         k: pd.date_range(*p, freq=str(config["freq"]) + "h")
         for (k, p) in config["periods"].items()
     }
-    ra    rw_data = loading.wb1(config["data_path_wb1"], periods)
-    train_raw_data = raw_data.sel(time=periods["train"])
+    raw_data = loading.wb1(config["data_path_wb1"], periods)
     # data = loading.wb2(config["data_path_wb2"], periods)
     train_raw_data = raw_data.sel(time=periods["train"])
 
@@ -107,9 +106,6 @@ if __name__ == "__main__":
 
     kernel = get_kernel(raw_data, config["vel"])
     data_velocities = get_velocities(data_selected, kernel, config)
-    train_velocities = torch.cat(tuple(data_velocities["train"].values()), dim=1).view(
-        -1, 32, 64, 10
-    )  # (1826, 10, 32, 64) -> (1826, 32, 64, 10) pour compatibilité avec les futurs cat
 
     train_dataset = Forcasting_ERA5Dataset(
         data_selected["train"],
