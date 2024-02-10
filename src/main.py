@@ -1,28 +1,23 @@
 import logging
 import os
 
+from icecream import ic, install
 from torch import optim
-
-from icecream import install, ic
 
 install()
 ic.configureOutput(includeContext=True)
 
-
-import data.loading as loading
 import pandas as pd
 import torch
-from data.dataset import Forcasting_ERA5Dataset, collate_fn
-from data.embeddings import get_time_localisation_embeddings
-from data.processing import select_data
 from model.models import ClimODE
 from model.velocity import get_kernel, get_velocities
 from torch import optim
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 from utils.loss import CustomGaussianNLLLoss
 
 import data.loading as loading
-from data.dataset import Forcasting_ERA5Dataset
+from data.dataset import Forcasting_ERA5Dataset, collate_fn
 from data.embeddings import get_time_localisation_embeddings
 from data.processing import select_data
 
@@ -38,7 +33,7 @@ elif torch.backends.mps.is_available():
     torch.mps.empty_cache()
 
 config = {
-    "data_path_wb1": "data/era5_data/",
+    "data_path_wb1": "../data/era5_data/",
     "data_path_wb2": "data/1959-2023_01_10-6h-64x32_equiangular_conservative.zarr",
     "freq": 6,
     "nb_variable_time_dependant": len(variables_time_dependant),
@@ -144,17 +139,17 @@ if __name__ == "__main__":
     criterion = CustomGaussianNLLLoss()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300)
 
-
     print("device", gpu_device)
 
-
     for epoch in range(config["max_epoch"]):
+        print(f"############ EPOCH {epoch}")
         if epoch == 0:
             var_coeff = 0.001
         else:
             var_coeff = 2 * scheduler.get_last_lr()[0]
 
-        for data, vel, t in train_loader:
+        for data, vel, t in tqdm(train_loader):
+            optimizer.zero_grad()
             # data : torch.Size([12, 8, 5, 32, 64])
             # vel : torch.Size([12, 5, 2, 32, 64])
             # t : torch.Size([12]) # index à utiliser pour les embeddings
@@ -164,9 +159,13 @@ if __name__ == "__main__":
             mean, std = model(data[:, 0], vel, t)
 
             loss = criterion(mean, data, std, var_coeff)
-            ic(loss.isnan().sum())
-
+            if loss.isnan().any():
+                raise ValueError("Loss have NaN")
+            l2_lambda = 0.001
+            l2_norm = sum(p.pow(2.0).sum() for p in model.parameters())
+            loss = loss + l2_lambda * l2_norm
             loss.backward()
             optimizer.step()
-            break
-        break
+
+            print("loss:", loss.item())
+        scheduler.step()

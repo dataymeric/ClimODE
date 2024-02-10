@@ -31,11 +31,13 @@ class Forcasting_ERA5Dataset(Dataset):
 
 
 def collate_fn(batch):
-    data = [i[0] for i in batch]
+    data2 = [i[0] for i in batch]
     velocities = [i[1] for i in batch]
     time = [i[2] for i in batch]
-
-    data = torch.stack(list(torch.stack(data).values()), dim=2)
+    try:
+        data = torch.stack(list(torch.stack(data2).values()), dim=2)
+    except:
+        print(data2)
     velocities = torch.stack(list(torch.stack(velocities).values()), dim=1)
     time = torch.tensor(time)
 
