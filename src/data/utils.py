@@ -20,4 +20,9 @@ def get_constants(path):
     lsm = torch.tensor(constants["lsm"].values)[(None,) * 2]
     lat2d = torch.tensor(constants["lat2d"].values)
     lon2d = torch.tensor(constants["lon2d"].values)
-    return oro, lsm, lat2d, lon2d # maybe les return dans le même sens que dans le papier ?
+    return (
+        oro,
+        lsm,
+        lat2d,
+        lon2d,
+    )  # maybe les return dans le même sens que dans le papier ?

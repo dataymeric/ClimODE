@@ -136,11 +136,11 @@ def fit_velocity(period_data, kernel, config):
         lambda x: stack_past_samples(x, n=s), batch_size=[new_batch_size]
     )
 
-    init_data_batch_size = data_train.batch_size[0] // config["bs"] + (
-        data_train.batch_size[0] % config["bs"] > 0
+    init_data_batch_size = data_train.batch_size[0] // config["pred_length"] + (
+        data_train.batch_size[0] % config["pred_length"] > 0
     )
     init_data = data_train.apply(
-        lambda x: select_from_slice_for_batch(x, batch_size=config["bs"]),
+        lambda x: select_from_slice_for_batch(x, batch_size=config["pred_length"]),
         batch_size=[init_data_batch_size],
     )
 
@@ -164,7 +164,7 @@ def get_hash(period_name, config):
     internal_config.update(config["vel"])
     internal_config["freq"] = config["freq"]
     internal_config["interval"] = config["periods"][period_name]
-    internal_config["bs"] = config["bs"]
+    internal_config["pred_length"] = config["pred_length"]
     internal_config.pop("device")
 
     import hashlib

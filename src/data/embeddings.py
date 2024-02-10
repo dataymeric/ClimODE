@@ -1,15 +1,15 @@
 import torch
 
 
-def get_day_and_season_embeddings(t):
+def get_day_and_season_embeddings(day_of_year_ratio, hour_of_day):
     """Returns the day and season embeddings.
-    TODO:
-    [] Check if the embedding change **a lot** with bissextile year
 
     Parameters
     ----------
-    t : Tensor (8760)=(365*24)
-        Hours of the years
+    day_of_year_ratio : torch.Tensor
+        The day of the year divided by the number of days in the specified year.
+    hour_of_day : torch.Tensor
+        The hour of the day.
 
     Returns
     -------
@@ -22,52 +22,22 @@ def get_day_and_season_embeddings(t):
         - Column 2: sin seasonal embedding
         - Column 3: cos seasonal embedding
     """
-    day_in_years = t / 24  # 365 or 366
-    hours_of_day = t % 24
-    day_of_years = t // 24
+    # étrange avec le fait que c'est des timesteps de 6h et pas de jours à voir
+    hours_of_day = hour_of_day % 24
     return torch.stack(
         (
             torch.sin(2 * torch.pi * hours_of_day),  # sin temporal embedding
             torch.cos(2 * torch.pi * hours_of_day),  # cos temporal embedding
-            torch.sin(
-                2 * torch.pi * day_of_years / day_in_years
-            ),  # sin seasonal embedding
-            torch.cos(
-                2 * torch.pi * day_of_years / day_in_years
-            ),  # cos seasonal embedding
+            torch.sin(2 * torch.pi * day_of_year_ratio),  # sin seasonal embedding
+            torch.cos(2 * torch.pi * day_of_year_ratio),  # cos seasonal embedding
         ),
         dim=1,
     )
-    """
-    Ce qui est fait dans le code du papier est un peu différent à mon gout, à cause du - pi/2
-    t_emb = (t % 24).view(-1, 1, 1, 1, 1)
-    sin_t_emb = torch.sin(torch.pi * t_emb / 12 - torch.pi / 2)
-    cos_t_emb = torch.cos(torch.pi * t_emb / 12 - torch.pi / 2)
-    sin_seas_emb = torch.sin(torch.pi * t_emb / (12 * 365) - torch.pi / 2)
-    cos_seas_emb = torch.cos(torch.pi * t_emb / (12 * 365) - torch.pi / 2)
-    => cat 
-    
-    Attention, c'est un autre calcul qui est fait dans les embedding pour 
-    le PDE et la résolution de l'équation différentielle, ici on est dans noise_net_contrib()
-
-    t_emb = (
-        ((t * 100) % 24)
-        .view(1, 1, 1, 1)
-        .expand(ds.shape[0], 1, ds.shape[2], ds.shape[3])
-    )
-    sin_t_emb = torch.sin(torch.pi * t_emb / 12 - torch.pi / 2)
-    cos_t_emb = torch.cos(torch.pi * t_emb / 12 - torch.pi / 2)
-
-    sin_seas_emb = torch.sin(torch.pi * t_emb / (12 * 365) - torch.pi / 2)
-    cos_seas_emb = torch.cos(torch.pi * t_emb / (12 * 365) - torch.pi / 2)
-
-    day_emb = torch.cat([sin_t_emb, cos_t_emb], dim=1)
-    seas_emb = torch.cat([sin_seas_emb, cos_seas_emb], dim=1)
-    """
 
 
 def get_localisation_embeddings(lat, lon):
     """Get localisation embeddings.
+    It's what is done in the forward loop.
 
     Parameters
     ----------
@@ -103,7 +73,9 @@ def get_localisation_embeddings(lat, lon):
     )
 
 
-def get_time_localisation_embeddings(time_step, lat, lon, lsm, oro):
+def get_time_localisation_embeddings(
+    day_of_year_ratio, hour_of_day, lat, lon, lsm, oro
+):
     """Get join time-localisation embeddings $\psi(x, t)$ for every $t$ in the time step range.
     Embedding are in the same order as in the paper:
     * Day and season $\psi(t)$: (nb_time_step, 4)
@@ -116,8 +88,10 @@ def get_time_localisation_embeddings(time_step, lat, lon, lsm, oro):
 
     Parameters
     ----------
-    time_step : torch.Tensor
-        List of time step for the embedding. Typically list(range(nb_time_step))
+    day_of_year_ratio : torch.Tensor
+        The day of the year divided by the number of days in the specified year.
+    hour_of_day : torch.Tensor
+        The hour of the day.
     lat : torch.Tensor
         latitude in 1D (32)
     lon : torch.Tensor
@@ -166,11 +140,13 @@ def get_time_localisation_embeddings(time_step, lat, lon, lsm, oro):
         """
         return x.view(1, 32, 64, -1).expand(nb_time_step, 32, 64, -1)
 
-    nb_time_step = len(time_step)
+    nb_time_step = len(hour_of_day)
     lat = lat.view(32, 1, 1).expand(32, 64, 1)
     lon = lon.view(1, 64, 1).expand(32, 64, 1)
     loc_emb = get_localisation_embeddings(lat, lon)  # (32, 64, 6)
-    day_seas_emb = get_day_and_season_embeddings(time_step)  # (nb_time_step, 4)
+    day_seas_emb = get_day_and_season_embeddings(
+        day_of_year_ratio, hour_of_day
+    )  # (nb_time_step, 4)
 
     # Preparing for localization and time embeddings combination
     loc_emb = loc_emb.expand(
@@ -182,7 +158,7 @@ def get_time_localisation_embeddings(time_step, lat, lon, lsm, oro):
     return torch.cat(
         [
             day_seas_emb,  # (nb_time_step, 32, 64, 4)
-            loc_emb,  # (nb_time_step, 32,64,6)
+            loc_emb,  # (nb_time_step, 32, 64, 6)
             get_time_pos_embedding(day_seas_emb, loc_emb),  # (nb_time_step, 32, 64, 24)
             add_time_step_dim(lat),  # (32,64,1) -> (nb_time_step, 32, 64, 1)
             add_time_step_dim(lon),  # (32,64,1) -> (nb_time_step, 32, 64, 1)
