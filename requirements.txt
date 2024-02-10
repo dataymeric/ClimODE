@@ -1,4 +1,4 @@
---find-links https://data.pyg.org/whl/torch-2.1.2+cpu.html
+--find-links https://data.pyg.org/whl/torch-2.1.2+cu121.html
 ## change cpu to cu121 for cuda 12.1 and so on
 git+https://github.com/patrick-kidger/torchcubicspline.git
 matplotlib
