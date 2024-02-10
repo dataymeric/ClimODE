@@ -19,6 +19,10 @@ class Forcasting_ERA5Dataset(Dataset):
         self.data = dataset
         self.velocities = velocities
 
+        if len(self.data) % pred_length != 0:
+            self.data = self.data[:-1]
+            self.velocities = self.velocities[:-1]
+
         self.pred_length = pred_length
 
     def __len__(self):
@@ -34,7 +38,6 @@ def collate_fn(batch):
     data = [i[0] for i in batch]
     velocities = [i[1] for i in batch]
     time = [i[2] for i in batch]
-
 
     data = torch.stack(list(torch.stack(data).values()), dim=2)
     velocities = torch.stack(list(torch.stack(velocities).values()), dim=1)

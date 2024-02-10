@@ -1,4 +1,4 @@
---find-links https://data.pyg.org/whl/torch-2.1.2+cu121.html
+--find-links https://data.pyg.org/whl/torch-2.2.0+cu121.html
 ## change cpu to cu121 for cuda 12.1 and so on
 git+https://github.com/patrick-kidger/torchcubicspline.git
 matplotlib
@@ -8,10 +8,10 @@ pre-commit
 requests
 tensordict
 torch
-torch-cluster
-torch-scatter
-torch-sparse
-torch-spline-conv
+#torch-cluster
+#torch-scatter
+#torch-sparse
+#torch-spline-conv
 torchdiffeq
 tqdm
 xarray[accel, parallel, io]
