@@ -188,7 +188,6 @@ class VelocityModel(nn.Module):
         x = torch.cat([t_emb, x_0, vel, nabla_u, time_pos_embedding], dim=-3)
 
         dv = self.local_model(x)
-
         dv += self.gamma * self.global_model(x)
 
         adv1 = past_velocity_x * x_0_grad_x + past_velocity_y * x_0_grad_y
@@ -223,7 +222,7 @@ class ClimODE(nn.Module):
         # Solvings ODE
         self.velocity_model.update_time(t)
 
-        ic(data.device, vel.device, ode_t.device)
+        # ic(data.device, vel.device, ode_t.device)
 
         data, vel = odeint(self.velocity_model, x, ode_t, method="euler")
 
@@ -231,6 +230,6 @@ class ClimODE(nn.Module):
         # we want the batch as the first dimension
         data = data.transpose(0, 1)
         vel = vel.transpose(0, 1)
-
+        ic(data.shape)
         mean, std = self.emission_model(t, data)
         return mean, std
