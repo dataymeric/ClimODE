@@ -26,9 +26,10 @@ elif torch.backends.mps.is_available():
     torch.mps.empty_cache()
 
 config = {
-    "data_path_wb1": "data/era5_data/",
-    "data_path_wb2": "data/1959-2023_01_10-6h-64x32_equiangular_conservative.zarr",
+    "data_path_wb1": "../data/era5_data/",
+    "data_path_wb2": "../data/1959-2023_01_10-6h-64x32_equiangular_conservative.zarr",
     "freq": 6,  # In hours
+    "nb_variable_time_dependant": len(variables_time_dependant),
     "periods": {
         "train": ("2006-01-01", "2015-12-31"),
         "val": ("2016-01-01", "2016-12-31"),
@@ -58,12 +59,12 @@ config = {
             "gamma": 0.1,
         },
         "EmissionModel": {
-            "in_channels": 5 + 34,  # err_in ; 5 ou 9 ??? je sais plus faut vérif
+            "in_channels": 9 + 34,  # err_in ; je sais pas pourquoi 9
             "layers_length": [3, 2, 2],
             "layers_hidden_size": [
                 128,
                 64,
-                2 * 5,
+                2 * len(variables_time_dependant),
             ],  # 5 = out_types = len(paths_to_data)
         },
         "norm_type": "batch",
@@ -110,7 +111,7 @@ if __name__ == "__main__":
 
     time_step = torch.Tensor(list(range(len(train_data))))
     time_step = torch.arange(0, len(train_data), 1)
-    time_step = torch.Tensor([0, 1])
+    # time_step = torch.Tensor(list(range(22)))
     time_pos_embedding = get_time_localisation_embeddings(
         time_step,
         torch.tensor(train_raw_data["lat"].values),
