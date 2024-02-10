@@ -30,7 +30,6 @@ class EmissionModel(nn.Module):
         t,
         x,
     ):
-        # ic(x.shape, self.time_pos_embedding.shape)  # [12, 8, 5, 32, 64]
         original_x = x
 
         # for each time step in t, we generate the next 8 time steps
@@ -39,11 +38,22 @@ class EmissionModel(nn.Module):
         t = t + torch.arange(0, self.config['pred_length'], device=t.device).view(1,
                                                                                   -1).flatten()
 
-        time_pos_embedding = self.time_pos_embedding[t].view(12, 8, -1, 32, 64)
+        tpe = self.time_pos_embedding[t]
+        tpe = tpe.view(
+            self.config['bs'],
+            self.config['pred_length'],
+            -1,
+            *tpe.shape[-2:]
+        ).to(x.device)
 
-        x = torch.cat([x, time_pos_embedding], dim=-3)
+        x = torch.cat([x, tpe], dim=-3)
         x = x.view(-1, *x.shape[2:])
-        x = self.model(x).view(12, 8, -1, 32, 64)
+        x = self.model(x).view(
+            self.config['bs'],
+            self.config['pred_length'],
+            -1,
+            *original_x.shape[-2:]
+        )
 
         mean = original_x + x[:, :, : self.nb_var_time_dep]
         std = F.softmax(x[:, :, self.nb_var_time_dep:], dim=-3)
@@ -166,9 +176,10 @@ class VelocityModel(nn.Module):
         # adapt following shape to genere
         # torch.Size([12, 1, 32, 64])
         t_emb = t.view(self.config["bs"], 1, 1, 1).expand(self.config["bs"], 1, 32, 64)
+        t_emb = t_emb.to(x_0.device)
 
         # torch.Size([12, 38, 32, 64])
-        time_pos_embedding = self.time_pos_embedding[t.to(torch.long)]
+        time_pos_embedding = self.time_pos_embedding[t.to(torch.long)].to(x_0.device)
 
         # torch.Size([12, 64, 32, 64])
         vel = vel.view(self.config["bs"], -1, 32, 64)
@@ -211,6 +222,8 @@ class ClimODE(nn.Module):
 
         # Solvings ODE
         self.velocity_model.update_time(t)
+
+        ic(data.device, vel.device, ode_t.device)
 
         data, vel = odeint(self.velocity_model, x, ode_t, method="euler")
 

@@ -135,19 +135,38 @@ if __name__ == "__main__":
         torch.tensor(train_raw_data["orography"].values),
     ).float()
 
+    ic(time_pos_embedding.shape)
+
     criterion = CustomGaussianNLLLoss()
 
-    model = ClimODE(config, time_pos_embedding)
+    model = ClimODE(config, time_pos_embedding).to(config["device"])
     optimizer = optim.AdamW(model.parameters(), lr=config["lr"])
     criterion = CustomGaussianNLLLoss()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300)
 
-    for data, vel, t in train_loader:
-        # data : torch.Size([12, 8, 5, 32, 64])
-        # vel : torch.Size([12, 5, 2, 32, 64])
-        # t : torch.Size([12]) # index à utiliser pour les embeddings
 
-        mean, std = model(data[:, 0], vel, t)
-        ic(mean.isnan().sum(), std.isnan().sum())
-        ic(mean.shape, std.shape)
+    print("device", gpu_device)
+
+
+    for epoch in range(config["max_epoch"]):
+        if epoch == 0:
+            var_coeff = 0.001
+        else:
+            var_coeff = 2 * scheduler.get_last_lr()[0]
+
+        for data, vel, t in train_loader:
+            # data : torch.Size([12, 8, 5, 32, 64])
+            # vel : torch.Size([12, 5, 2, 32, 64])
+            # t : torch.Size([12]) # index à utiliser pour les embeddings
+            data = data.to(config["device"])
+            vel = vel.to(config["device"])
+
+            mean, std = model(data[:, 0], vel, t)
+
+            loss = criterion(mean, data, std, var_coeff)
+            ic(loss.isnan().sum())
+
+            loss.backward()
+            optimizer.step()
+            break
         break
