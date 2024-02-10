@@ -16,8 +16,8 @@ class Forcasting_ERA5Dataset(Dataset):
             Number of timestep to predict
         """
         # Load and preprocess your data here
-        self.data = dataset[:-1]
-        self.velocities = velocities[:-1]
+        self.data = dataset
+        self.velocities = velocities
 
         self.pred_length = pred_length
 
@@ -31,13 +31,12 @@ class Forcasting_ERA5Dataset(Dataset):
 
 
 def collate_fn(batch):
-    data2 = [i[0] for i in batch]
+    data = [i[0] for i in batch]
     velocities = [i[1] for i in batch]
     time = [i[2] for i in batch]
-    try:
-        data = torch.stack(list(torch.stack(data2).values()), dim=2)
-    except:
-        print(data2)
+
+
+    data = torch.stack(list(torch.stack(data).values()), dim=2)
     velocities = torch.stack(list(torch.stack(velocities).values()), dim=1)
     time = torch.tensor(time)
 

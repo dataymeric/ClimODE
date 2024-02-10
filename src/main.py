@@ -29,7 +29,7 @@ if torch.cuda.is_available():
     gpu_device = torch.device("cuda")
     torch.cuda.empty_cache()
 elif torch.backends.mps.is_available():
-    gpu_device = torch.device("mps")
+    gpu_device = torch.device("cpu")
     torch.mps.empty_cache()
 
 config = {
@@ -156,7 +156,7 @@ if __name__ == "__main__":
             data = data.to(config["device"])
             vel = vel.to(config["device"])
 
-            mean, std = model(data[:, 0], vel, t)
+            mean, std = model(data, vel, t)
 
             loss = criterion(mean, data, std, var_coeff)
             if loss.isnan().any():

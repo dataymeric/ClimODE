@@ -14,7 +14,6 @@ class EmissionModel(nn.Module):
 
     def __init__(self, config, time_pos_embedding):
         super().__init__()
-        self.config = config
         self.sub_config = config["model"]["EmissionModel"]
         self.model = ClimateResNet2D(
             self.sub_config["in_channels"],
@@ -34,14 +33,16 @@ class EmissionModel(nn.Module):
 
         # for each time step in t, we generate the next 8 time steps
 
-        t = t.view(-1, 1).expand(-1, self.config['pred_length'])
-        t = t + torch.arange(0, self.config['pred_length'], device=t.device).view(1,
-                                                                                  -1).flatten()
+        curr_batch_size = x.shape[0]
+        curr_pred_length = x.shape[1]
+
+        t = t.view(-1, 1).expand(-1, curr_pred_length)
+        t = t + torch.arange(0, curr_pred_length, device=t.device).view(1, -1).flatten()
 
         tpe = self.time_pos_embedding[t]
         tpe = tpe.view(
-            self.config['bs'],
-            self.config['pred_length'],
+            curr_batch_size,
+            curr_pred_length,
             -1,
             *tpe.shape[-2:]
         ).to(x.device)
@@ -49,8 +50,8 @@ class EmissionModel(nn.Module):
         x = torch.cat([x, tpe], dim=-3)
         x = x.view(-1, *x.shape[2:])
         x = self.model(x).view(
-            self.config['bs'],
-            self.config['pred_length'],
+            curr_batch_size,
+            curr_pred_length,
             -1,
             *original_x.shape[-2:]
         )
@@ -118,10 +119,11 @@ class AttentionModel(nn.Module):
         k = self.key(x).flatten(-2, -1)  # (1, 8, 3, 13) -> (1, 8, 65)
         v = self.value(x).flatten(-2, -1)  # (1, 10, 3, 13) -> (1, 10, 65)
         # ic(q.shape, k.shape, v.shape)
-        # Il doit y avoir moyen de mieux faire, le contiguous est salle je pense
+
         attention_beta = F.softmax(torch.bmm(q.transpose(1, 2), k), dim=1)
         attention_beta = torch.bmm(v, attention_beta.transpose(1, 2))
-        attention_beta = attention_beta.view(self.bs, -1, 32, 64)
+
+        attention_beta = attention_beta.view(attention_beta.shape[0], -1, *x.shape[-2:])
 
         output = self.post_map(attention_beta)
         return output
@@ -162,6 +164,8 @@ class VelocityModel(nn.Module):
 
         (x_0, vel) = x
 
+        curr_batch_size = x_0.shape[0]
+
         past_velocity_x = vel[:, :, 0]
         past_velocity_y = vel[:, :, 1]
         past_velocity_grad_x = torch.gradient(past_velocity_x, dim=-1)[0]
@@ -175,19 +179,20 @@ class VelocityModel(nn.Module):
 
         # adapt following shape to genere
         # torch.Size([12, 1, 32, 64])
-        t_emb = t.view(self.config["bs"], 1, 1, 1).expand(self.config["bs"], 1, 32, 64)
+        t_emb = t.view(curr_batch_size, 1, 1, 1).expand(curr_batch_size, 1, 32, 64)
         t_emb = t_emb.to(x_0.device)
 
         # torch.Size([12, 38, 32, 64])
         time_pos_embedding = self.time_pos_embedding[t.to(torch.long)].to(x_0.device)
 
         # torch.Size([12, 64, 32, 64])
-        vel = vel.view(self.config["bs"], -1, 32, 64)
+        vel = vel.view(curr_batch_size, -1, 32, 64)
 
         # torch.Size([12, 64, 32, 64])
         x = torch.cat([t_emb, x_0, vel, nabla_u, time_pos_embedding], dim=-3)
 
         dv = self.local_model(x)
+
         dv += self.gamma * self.global_model(x)
 
         adv1 = past_velocity_x * x_0_grad_x + past_velocity_y * x_0_grad_y
@@ -212,17 +217,15 @@ class ClimODE(nn.Module):
         """
         OK
         """
-
+        pred_length = data.shape[1]
         ode_t = 0.1 * torch.linspace(
-            0, 8, steps=8
+            0, pred_length, steps=pred_length
         ).to(self.device)
 
-        x = (data, vel)
+        x = (data[:, 0], vel)
 
         # Solvings ODE
         self.velocity_model.update_time(t)
-
-        # ic(data.device, vel.device, ode_t.device)
 
         data, vel = odeint(self.velocity_model, x, ode_t, method="euler")
 
@@ -230,6 +233,6 @@ class ClimODE(nn.Module):
         # we want the batch as the first dimension
         data = data.transpose(0, 1)
         vel = vel.transpose(0, 1)
-        ic(data.shape)
+
         mean, std = self.emission_model(t, data)
         return mean, std
