@@ -11,8 +11,14 @@ from data.embeddings import get_time_localisation_embeddings
 from data.processing import select_data
 from model.models import ClimODE
 from model.velocity import get_kernel, get_velocities
+from torch import optim
 from torch.utils.data import DataLoader
 from utils.loss import CustomGaussianNLLLoss
+
+import data.loading as loading
+from data.dataset import Forcasting_ERA5Dataset
+from data.embeddings import get_time_localisation_embeddings
+from data.processing import select_data
 
 variables_time_dependant = ["t2m", "t", "z", "u10", "v10"]
 variables_static = ["lsm", "orography"]
@@ -28,7 +34,8 @@ elif torch.backends.mps.is_available():
 config = {
     "data_path_wb1": "data/era5_data/",
     "data_path_wb2": "data/1959-2023_01_10-6h-64x32_equiangular_conservative.zarr",
-    "freq": "6h",
+    "freq": 6,
+    "nb_variable_time_dependant": len(variables_time_dependant),
     "periods": {
         "train": ("2006-01-01", "2015-12-31"),
         "val": ("2016-01-01", "2016-12-31"),
@@ -58,12 +65,12 @@ config = {
             "gamma": 0.1,
         },
         "EmissionModel": {
-            "in_channels": 5 + 34,  # err_in ; 5 ou 9 ??? je sais plus faut vérif
+            "in_channels": 9 + 34,  # err_in ; je sais pas pourquoi 9
             "layers_length": [3, 2, 2],
             "layers_hidden_size": [
                 128,
                 64,
-                2 * 5,
+                2 * len(variables_time_dependant),
             ],  # 5 = out_types = len(paths_to_data)
         },
         "norm_type": "batch",
@@ -81,18 +88,15 @@ config = {
 
 if __name__ == "__main__":
     # check the script is executed within the parent directory
-    if not os.path.exists("src/main.py"):
-        raise RuntimeError(
-            "The script must be executed within the project root directory"
-        )
 
     logging.basicConfig(level=logging.INFO)
 
     periods = {
-        k: pd.date_range(*p, freq=config["freq"])
+        k: pd.date_range(*p, freq=str(config["freq"]) + "h")
         for (k, p) in config["periods"].items()
     }
-    raw_data = loading.wb1(config["data_path_wb1"], periods)
+    ra    rw_data = loading.wb1(config["data_path_wb1"], periods)
+    train_raw_data = raw_data.sel(time=periods["train"])
     # data = loading.wb2(config["data_path_wb2"], periods)
     train_raw_data = raw_data.sel(time=periods["train"])
 
@@ -103,6 +107,9 @@ if __name__ == "__main__":
 
     kernel = get_kernel(raw_data, config["vel"])
     data_velocities = get_velocities(data_selected, kernel, config)
+    train_velocities = torch.cat(tuple(data_velocities["train"].values()), dim=1).view(
+        -1, 32, 64, 10
+    )  # (1826, 10, 32, 64) -> (1826, 32, 64, 10) pour compatibilité avec les futurs cat
 
     train_dataset = Forcasting_ERA5Dataset(
         data_selected["train"],

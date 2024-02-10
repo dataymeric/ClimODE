@@ -4,7 +4,6 @@ from torch import nn
 from torch.nn import functional as F
 from torchdiffeq import odeint
 
-
 class EmissionModel(nn.Module):
     """
     Equivalent of noise_net_contrib() using a class format.
@@ -19,22 +18,25 @@ class EmissionModel(nn.Module):
             self.sub_config["layers_hidden_size"],
             config,
         )
-        self.time_pos_embedding = time_pos_embedding
+        self.time_pos_embedding = time_pos_embedding.view(-1, 38, 32, 64)
+        self.nb_var_time_dep = config["nb_variable_time_dependant"]
 
     def forward(
         self,
         t,
         x,
     ):
-        """
-        WIP, not tested yet.
-        """
-        # Dim ? Je connais pas la dim de x yet
-        x = torch.cat([x, self.time_pos_embedding[t]], dim=1)
+        # ic(x.shape, self.time_pos_embedding.shape)  # [8, 5, 32, 64]
+        original_x = x
+        x = torch.cat([x, self.time_pos_embedding[t]], dim=-3)
         x = self.model(x)
-        # From original code, not sure if it's correct
-        mean = x + x[:, :, : self.sub_config["out_types"]]
-        std = nn.Softplus()(x[:, :, self.sub_config["out_types"] :])
+        # ic(
+        #     x.shape, # [8, 10, 32, 64]
+        #     x[:, : self.nb_var_time_dep].shape, original_x.shape
+        # )
+        # From original code, idk what he is doing here
+        mean = original_x + x[:, : self.nb_var_time_dep]
+        std = F.softmax(x[:, self.nb_var_time_dep :], dim=-3)
         return mean, std
 
 
@@ -77,8 +79,7 @@ class AttentionModel(nn.Module):
         )
 
     def forward(self, x):
-        """OK
-
+        """
         Parameters
         ----------
         x : _type_
@@ -100,19 +101,6 @@ class AttentionModel(nn.Module):
         attention_beta = attention_beta.view(1, -1, 32, 64).contiguous()
         # ic(self.post_map(attention_beta).shape) # (1, 10, 32, 64)
         return self.post_map(attention_beta)
-        """
-        size = x.size()
-        x = x.float()
-        q, k, v = (
-            self.query(x).flatten(-2, -1),
-            self.key(x).flatten(-2, -1),
-            self.value(x).flatten(-2, -1),
-        )
-        beta = F.softmax(torch.bmm(q.transpose(1, 2), k), dim=1)
-        o = torch.bmm(v, beta.transpose(1, 2))
-        o = self.post_map(o.view(-1, self.out_ch, size[-2], size[-1]).contiguous())
-        return o
-        """
 
 
 class VelocityModel(nn.Module):
@@ -123,7 +111,7 @@ class VelocityModel(nn.Module):
     def __init__(self, config, time_pos_embedding):
         super().__init__()
         sub_config = config["model"]["VelocityModel"]
-        self.time_pos_embedding = time_pos_embedding
+        self.time_pos_embedding = time_pos_embedding.view(-1, 38, 32, 64)
         self.local_model = ClimateResNet2D(
             sub_config["local"]["in_channels"],
             sub_config["local"]["layers_length"],
@@ -138,46 +126,51 @@ class VelocityModel(nn.Module):
 
     def forward(self, t, x):
         """
-        OK tested
+        OK
         Input must directly have all the parameters concatenated.
-        x: shape: (32, 64, 15) -> (32, 64, 10) + (32, 64, 5)
+        x: shape: (15,32,64) -> (10, 32,64,10) + (5,32,64)
         """
 
-        x_0, vel = x
+        # Obligé de cat avant puis uncat ici car odeint ne peut pas split ces param je pense
+        # pour le coup un tensors dict ici serait plus propre mais plus le temps
+        # Si on passe en (batch, timestep, année, ...,...), il faudra rajouter un :
+        past_velocity = x[:10]  # v in original code
+        past_velocity_x = past_velocity[:5]
+        past_velocity_y = past_velocity[5:]
+        past_velocity_grad_x = torch.gradient(past_velocity_x, dim=-2)[0]
+        past_velocity_grad_y = torch.gradient(past_velocity_y, dim=-3)[0]
 
-        past_velocity_x = vel[:, :, 0]
-        past_velocity_y = vel[:, :, 1]
+        x_0 = x[10:, :, :]  # ds in original code
+        x_0_grad_x = torch.gradient(x_0, dim=-1)[0]  # sur la dim de la logitude (64)
+        x_0_grad_y = torch.gradient(x_0, dim=-2)[0]  # sur la dim de la latitude (32)
+        nabla_u = torch.cat([x_0_grad_x, x_0_grad_y], dim=-3)  # (2*5,32,64)
 
-        past_velocity_grad_x = torch.gradient(past_velocity_x, dim=-1)[0]
-        past_velocity_grad_y = torch.gradient(past_velocity_y, dim=-2)[0]
-
-        x_0_grad_x = torch.gradient(x_0, dim=-1)[0]
-        x_0_grad_y = torch.gradient(x_0, dim=-2)[0]
-        nabla_u = torch.cat([x_0_grad_x, x_0_grad_y], dim=-1)  # (32,64,2*5)
-
-        t_emb = t.view(1, 1, 1).expand(32, 64, 1)
+        t_emb = t.view(1, 1, 1).expand(1, 32, 64)
         t = int(t.item()) * 100
-        # ic(
-        #     x.shape,
-        #     nabla_u.shape,
-        #     self.time_pos_embedding[t].shape,
-        #     past_velocity.shape,
-        #     x_0.shape,
-        # )
 
-        x = torch.cat([t_emb, x, nabla_u, self.time_pos_embedding[t]], dim=-1)
+        x = torch.cat([t_emb, x, nabla_u, self.time_pos_embedding[t]], dim=-3)
         # Unsquueze for simulate a batch of 1
-        # and inverting the last dimension to the match CNN style conv (sorry j'aurai pu le faire avant j'ai merdé tant pis TODO)
-        x = x.view(1, 64, 32, 64)
+        x = x.unsqueeze(0)
+        # ic(
+        #     x.shape, # [1, 64, 32, 64]
+        #     nabla_u.shape, # [10, 32, 64]
+        #     self.time_pos_embedding[t].view(-1, 32, 64).shape, # [38, 32, 64]
+        #     past_velocity.shape, # [10, 32, 64]
+        #     x_0.shape, # [5, 32, 64]
+        # )
         dv = self.local_model(x)
         dv += self.gamma * self.global_model(x)
-        dv = dv.squeeze().view(32, 64, -1)  # (32, 64, 10)
+        dv = dv.squeeze().view(-1, 32, 64)  # (10, 32, 64)
 
         adv1 = past_velocity_x * x_0_grad_x + past_velocity_y * x_0_grad_y
         adv2 = x_0 * (past_velocity_grad_x + past_velocity_grad_y)
 
-        # ic(dv.shape, adv1.shape, adv2.shape)
-        dvs = torch.cat([dv, adv1 + adv2], dim=-1)
+        # ic(
+        #   v.shape, # [10, 32, 64]
+        #   adv1.shape, # [5, 32, 64]
+        #   adv2.shape, # [5, 32, 64]
+        # )
+        dvs = torch.cat([dv, adv1 + adv2], dim=0)
         return dvs
 
 
@@ -191,31 +184,28 @@ class ClimODE(nn.Module):
         self.emission_model = EmissionModel(config, time_pos_embedding)
         self.time_pos_embedding = time_pos_embedding
 
-    def forward(self, data, vel, t):
+    def forward(self, t, x):
         """
-        WIP, not tested yet.
-
-        data torch.Size([12, 5, 32, 64])
-        vel torch.Size([12, 5, 2, 32, 64])
-
-        soit si odeint peut prendre un tuple on garde data et vel séparé sinon
-        on les concatène et on les sépare dans le forward de velocity_model comme tu avais fait
-
+        OK
         """
-
-        x = (data, vel)
 
         # Calcul of news timesteps
         init_time = t[0].item() * self.freq
         final_time = t[-1].item() * self.freq
         steps_val = final_time - init_time
-        ode_t = (1 / 100) * torch.linspace(
+        ode_t = 0.01 * torch.linspace(
             init_time, final_time, steps=int(steps_val) + 1
-        ).to(
-            self.device
-        )  # Je sais pas pourquoi 0.01
+        ).to(self.device)  # Je sais pas pourquoi 0.01
 
         # Solvings ODE
-        x = odeint(self.velocity_model, x, t, method="euler")
+        x = odeint(self.velocity_model, x, ode_t, method="euler")
+        # ic(x.shape) # torch.Size([43, 15, 32, 64])
+        x = x[
+            :, -5:
+        ]  # On récupère que les données de la prédiction uniquement, pas des past velocities si je comprends bien ???
+        # Nan je sais pas
+        # ic(x.shape) # [43, 5, 32, 64]
+        x = x[::6]  # idk pourquoi on fait ça, je crois qu'on rediscretise en 8 morceaux
+        # ic(x.shape) # ([8, 5, 32, 64])
         mean, std = self.emission_model(t, x)
         return mean, std
