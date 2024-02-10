@@ -33,7 +33,7 @@ elif torch.backends.mps.is_available():
     torch.mps.empty_cache()
 
 config = {
-    "data_path_wb1": "../data/era5_data/",
+    "data_path_wb1": "data/era5_data/",
     "data_path_wb2": "data/1959-2023_01_10-6h-64x32_equiangular_conservative.zarr",
     "freq": 6,
     "nb_variable_time_dependant": len(variables_time_dependant),
@@ -81,6 +81,7 @@ config = {
         "dropout": 0.1,
     },
     "pred_length": 8,
+    "weight_decay": 1e-5,
     "bs": 12,
     "max_epoch": 300,
     "lr": 0.0005,
@@ -131,11 +132,10 @@ if __name__ == "__main__":
     ).float()
 
     ic(time_pos_embedding.shape)
-
     criterion = CustomGaussianNLLLoss()
 
     model = ClimODE(config, time_pos_embedding).to(config["device"])
-    optimizer = optim.AdamW(model.parameters(), lr=config["lr"])
+    optimizer = optim.AdamW(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
     criterion = CustomGaussianNLLLoss()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 300)
 
@@ -161,9 +161,6 @@ if __name__ == "__main__":
             loss = criterion(mean, data, std, var_coeff)
             if loss.isnan().any():
                 raise ValueError("Loss have NaN")
-            l2_lambda = 0.001
-            l2_norm = sum(p.pow(2.0).sum() for p in model.parameters())
-            loss = loss + l2_lambda * l2_norm
             loss.backward()
             optimizer.step()
 
