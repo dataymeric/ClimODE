@@ -29,7 +29,7 @@ def predict_to_zarr(model, test_loader, raw_data, config, variables_time_dependa
     lat = data_test.get_index("lat")
     lon = data_test.get_index("lon")
     time = data_test.get_index("time")
-    idx = {"latitude": lat, "longitude": lon, "time": time, "timedelta": timedelta}
+    idx = {"latitude": lat, "longitude": lon, "time": time, "prediction_timedelta": timedelta}
 
     # Prediction on the test set
     l = []  # noqa: E741
@@ -42,7 +42,7 @@ def predict_to_zarr(model, test_loader, raw_data, config, variables_time_dependa
     data = torch.cat(l, dim=0).view(32, 64, 364, 8, 5).numpy()
 
     # Creating xarray dataset
-    dims = ("latitude", "longitude", "time", "timedelta")
+    dims = ("latitude", "longitude", "time", "prediction_timedelta")
     d = {
         "2m_temperature": (dims, data[..., 0]),
         "temperature": (dims, data[..., 1]),
