@@ -3,6 +3,12 @@ import os
 
 from torch import optim
 
+from icecream import install, ic
+
+install()
+ic.configureOutput(includeContext=True)
+
+
 import data.loading as loading
 import pandas as pd
 import torch
@@ -141,5 +147,7 @@ if __name__ == "__main__":
         # vel : torch.Size([12, 5, 2, 32, 64])
         # t : torch.Size([12]) # index à utiliser pour les embeddings
 
-        output = model(data[:, 0], vel, t)
+        mean, std = model(data[:, 0], vel, t)
+        ic(mean.isnan().sum(), std.isnan().sum())
+        ic(mean.shape, std.shape)
         break

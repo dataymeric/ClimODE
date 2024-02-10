@@ -27,7 +27,7 @@ class Forcasting_ERA5Dataset(Dataset):
     def __getitem__(self, index):
         data = self.data[index * self.pred_length : (index + 1) * self.pred_length]
         vel = self.velocities[index]
-        return data, vel, index * self.pred_length
+        return data, vel, int(index * self.pred_length)
 
 
 def collate_fn(batch):

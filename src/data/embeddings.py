@@ -22,10 +22,7 @@ def get_day_and_season_embeddings(day_of_year_ratio, hour_of_day):
         - Column 2: sin seasonal embedding
         - Column 3: cos seasonal embedding
     """
-    # étrange avec le fait que c'est des timesteps de 6h et pas de jours à voir
-    day_in_years = len(t) / 24  # 365 or 366
-    hours_of_day = t % 24
-    day_of_years = t // 24
+    hours_of_day = hour_of_day % 24
     return torch.stack(
         (
             torch.sin(2 * torch.pi * hours_of_day),  # sin temporal embedding
