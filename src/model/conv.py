@@ -80,8 +80,8 @@ class ClimateResNet2D(nn.Module):
     @staticmethod
     def make_layer(in_channels, out_channels, reps, config):
         return [ResidualBlock(in_channels, out_channels, config)] + [
-            ResidualBlock(out_channels, out_channels, config)
-        ] * (reps - 1)
+            ResidualBlock(out_channels, out_channels, config) for _ in range(reps - 1)
+        ]
 
     def forward(self, x):
         x = x.float()

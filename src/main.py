@@ -175,7 +175,7 @@ def setup_exp_logging(config, trainer, evaluator, optimizer):
         log_handler=OutputHandler(
             tag="validation",
             output_transform=lambda x: {"loss": x},
-            global_step_transform= lambda x, _ : trainer.state.iteration,
+            global_step_transform=lambda x, _: trainer.state.iteration,
         ),
         event_name=Events.EPOCH_COMPLETED,
     )
@@ -185,7 +185,7 @@ def setup_exp_logging(config, trainer, evaluator, optimizer):
         log_handler=OutputHandler(
             tag="training",
             output_transform=lambda x: {"loss": x},
-            global_step_transform=lambda x, _ : trainer.state.iteration,
+            global_step_transform=lambda x, _: trainer.state.iteration,
         ),
         event_name=Events.ITERATION_COMPLETED,
     )
@@ -240,19 +240,19 @@ def run(local_rank: int, config: Any):
     data_velocities = get_velocities(data_selected, kernel, config)
 
     train_dataset = Forcasting_ERA5Dataset(
-        data_selected["train"][config["vel"]["stacking"]-1:],
+        data_selected["train"][config["vel"]["stacking"] - 1 :],
         data_velocities["train"],
         pred_length=config["pred_length"],
     )
 
     val_dataset = Forcasting_ERA5Dataset(
-        data_selected["val"][config["vel"]["stacking"]-1:],
+        data_selected["val"][config["vel"]["stacking"] - 1 :],
         data_velocities["val"],
         pred_length=config["pred_length"],
     )
 
     test_dataset = Forcasting_ERA5Dataset(
-        data_selected["test"][config["vel"]["stacking"]-1:],
+        data_selected["test"][config["vel"]["stacking"] - 1 :],
         data_velocities["test"],
         pred_length=config["pred_length"],
     )
@@ -273,7 +273,6 @@ def run(local_rank: int, config: Any):
     day_of_year_ratio = train_raw_data["time"].dt.dayofyear / (365 + leap_year)
     hour_of_day = train_raw_data["time"].dt.hour
 
-
     device = idist.device()
 
     time_pos_embedding = get_time_localisation_embeddings(
@@ -283,7 +282,7 @@ def run(local_rank: int, config: Any):
         torch.tensor(train_raw_data["lon"].values),
         torch.tensor(train_raw_data["lsm"].values),
         torch.tensor(train_raw_data["orography"].values),
-    ).float()#.to(device=device)  # if enough VRAM
+    ).float()  # .to(device=device)  # if enough VRAM
 
     model = ClimODE(config, time_pos_embedding).to(device)
     model = idist.auto_model(model)
