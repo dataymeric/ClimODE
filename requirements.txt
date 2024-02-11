@@ -8,6 +8,8 @@ pre-commit
 requests
 tensordict
 torch
+pytorch-ignite
+wandb
 #torch-cluster
 #torch-scatter
 #torch-sparse

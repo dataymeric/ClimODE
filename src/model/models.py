@@ -1,8 +1,7 @@
 import torch
-from icecream import ic
 from torch import nn
 from torch.nn import functional as F
-from torchdiffeq import odeint_adjoint as odeint
+from torchdiffeq import odeint
 
 from model.conv import ClimateResNet2D
 
@@ -40,24 +39,18 @@ class EmissionModel(nn.Module):
         t = t + torch.arange(0, curr_pred_length, device=t.device).view(1, -1).flatten()
 
         tpe = self.time_pos_embedding[t]
-        tpe = tpe.view(
-            curr_batch_size,
-            curr_pred_length,
-            -1,
-            *tpe.shape[-2:]
-        ).to(x.device)
+        tpe = tpe.view(curr_batch_size, curr_pred_length, -1, *tpe.shape[-2:]).to(
+            x.device
+        )
 
         x = torch.cat([x, tpe], dim=-3)
         x = x.view(-1, *x.shape[2:])
         x = self.model(x).view(
-            curr_batch_size,
-            curr_pred_length,
-            -1,
-            *original_x.shape[-2:]
+            curr_batch_size, curr_pred_length, -1, *original_x.shape[-2:]
         )
 
         mean = original_x + x[:, :, : self.nb_var_time_dep]
-        std = F.softmax(x[:, :, self.nb_var_time_dep:], dim=-3)
+        std = F.softmax(x[:, :, self.nb_var_time_dep :], dim=-3)
 
         return mean, std
 
@@ -171,7 +164,7 @@ class VelocityModel(nn.Module):
         past_velocity_grad_x = torch.gradient(past_velocity_x, dim=-1)[0]
         past_velocity_grad_y = torch.gradient(past_velocity_y, dim=-2)[0]
 
-        x_0_grad_x = torch.gradient(x_0, dim=-1)[0]  # sur la dim de la logitude (64)
+        x_0_grad_x = torch.gradient(x_0, dim=-1)[0]  # sur la dim de la longitude (64)
         x_0_grad_y = torch.gradient(x_0, dim=-2)[0]  # sur la dim de la latitude (32)
         nabla_u = torch.cat([x_0_grad_x, x_0_grad_y], dim=-3)  # (batch, 2*5,32,64)
 
@@ -218,9 +211,9 @@ class ClimODE(nn.Module):
         OK
         """
         pred_length = data.shape[1]
-        ode_t = 0.1 * torch.linspace(
-            0, pred_length, steps=pred_length
-        ).to(self.device)
+        ode_t = 0.001 * torch.linspace(0, pred_length, steps=pred_length).to(
+            self.device
+        )
 
         x = (data[:, 0], vel)
 

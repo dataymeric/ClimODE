@@ -1,6 +1,5 @@
 import torch.nn as nn
 import torch.nn.functional as F
-from icecream import ic
 
 
 def NormLayer(dim, config):
@@ -41,24 +40,24 @@ class ResidualBlock(nn.Module):
         self.shortcut = (
             nn.Identity() if dim_in == dim_out else nn.Conv2d(dim_in, dim_out, 1)
         )
-
-    def padding(self, x):
-        x = F.pad(x, (0, 0, 1, 1), "reflect")  # reflect padding on Y
-        x = F.pad(x, (1, 1, 0, 0), "circular")  # circular padding on X
-        return x
+        self.padder_reflect = nn.ReflectionPad2d((0, 0, 1, 1))
+        self.padder_circular = nn.CircularPad2d((1, 1, 0, 0))
 
     def forward(self, x):
         out = self.activation(x)
 
         # First convolutional layer
-        out = self.padding(out)
+        out = self.padder_reflect(out)
+        out = self.padder_circular(out)
+
         out = self.conv1(out)
         out = self.norm1(out)
 
         out = self.activation(out)
 
         # Second convolutional layer
-        out = self.padding(out)
+        out = self.padder_reflect(out)
+        out = self.padder_circular(out)
         out = self.conv2(out)
         out = self.norm2(out)
 

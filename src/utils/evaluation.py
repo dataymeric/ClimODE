@@ -1,6 +1,7 @@
 import torch
 import pandas as pd
 import xarray as xr
+
 # lat = torch.tensor(train_raw_data["lat"].values) * torch.pi / 180
 # cos_h = torch.cos(lat)
 # latitude_weight = cos_h / cos_h.mean()
@@ -16,9 +17,10 @@ def batch_rmse(mean_pred, mean_true, latitude_weight):
     return loss
 
 
-def predict_to_zarr(model, test_loader, raw_data, config, variables_time_dependant, periods):
-    """Might be splited into smaller function
-    """
+def predict_to_zarr(
+    model, test_loader, raw_data, config, variables_time_dependant, periods
+):
+    """Might be splited into smaller function"""
     # Getting original index
     data_test = raw_data.sel(time=periods["test"][:-5][:: config["pred_length"]])[
         variables_time_dependant
@@ -29,7 +31,12 @@ def predict_to_zarr(model, test_loader, raw_data, config, variables_time_dependa
     lat = data_test.get_index("lat")
     lon = data_test.get_index("lon")
     time = data_test.get_index("time")
-    idx = {"latitude": lat, "longitude": lon, "time": time, "prediction_timedelta": timedelta}
+    idx = {
+        "latitude": lat,
+        "longitude": lon,
+        "time": time,
+        "prediction_timedelta": timedelta,
+    }
 
     # Prediction on the test set
     l = []  # noqa: E741
@@ -51,4 +58,3 @@ def predict_to_zarr(model, test_loader, raw_data, config, variables_time_dependa
         "10m_v_component_of_wind": (dims, data[..., 4]),
     }
     return xr.Dataset(d, coords=idx)
-    
