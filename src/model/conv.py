@@ -2,6 +2,24 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class CustomRefPad2d(nn.Module):
+    def __init__(self, padding):
+        super(CustomRefPad2d, self).__init__()
+        self.padding = padding
+
+    def forward(self, x):
+        return F.pad(x, self.padding, mode="reflect")
+
+
+class CustomCircPad2d(nn.Module):
+    def __init__(self, padding):
+        super(CustomCircPad2d, self).__init__()
+        self.padding = padding
+
+    def forward(self, x):
+        return F.pad(x, self.padding, mode="circular")
+
+
 def NormLayer(dim, config):
     norm_type = config["model"]["norm_type"]
     if norm_type == "batch":
@@ -40,8 +58,8 @@ class ResidualBlock(nn.Module):
         self.shortcut = (
             nn.Identity() if dim_in == dim_out else nn.Conv2d(dim_in, dim_out, 1)
         )
-        self.padder_reflect = nn.ReflectionPad2d((0, 0, 1, 1))
-        self.padder_circular = nn.CircularPad2d((1, 1, 0, 0))
+        self.padder_reflect = CustomRefPad2d((0, 0, 1, 1))
+        self.padder_circular = CustomCircPad2d((1, 1, 0, 0))
 
     def forward(self, x):
         out = self.activation(x)

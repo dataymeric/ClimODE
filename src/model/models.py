@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 from torchdiffeq import odeint
 
-from model.conv import ClimateResNet2D
+from model.conv import ClimateResNet2D, CustomRefPad2d, CustomCircPad2d
 
 
 class EmissionModel(nn.Module):
@@ -76,8 +76,8 @@ class AttentionModel(nn.Module):
         def get_block(in_channels, out_channels, stride, padding):
             if padding:
                 block = [
-                    nn.ReflectionPad2d((0, 0, 1, 1)),
-                    nn.CircularPad2d((1, 1, 0, 0)),
+                    CustomRefPad2d((0, 0, 1, 1)),
+                    CustomCircPad2d((1, 1, 0, 0)),
                 ]
             else:
                 block = []
@@ -220,7 +220,7 @@ class ClimODE(nn.Module):
         # Solvings ODE
         self.velocity_model.update_time(t)
 
-        data, vel = odeint(self.velocity_model, x, ode_t, method="euler")
+        data, vel = odeint(self.velocity_model, x, ode_t, method='implicit_adams')
 
         # ode return the time as the first dimension,
         # we want the batch as the first dimension
