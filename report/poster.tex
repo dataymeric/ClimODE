@@ -223,24 +223,23 @@
         \end{minipage}
 
 
-        % tableau avec comparaison temps d'exec euler / Rk / implicit adams w/ adjoint
-        % \textbf{\color{blue}Quantitative Results on {\sc Bunny} Rendered with $100$ MERL BRDFs:} \\
-        % \vspace{-1.0em}
-        % \begin{minipage}[t]{0.23\textwidth}
-        %     \vspace{-9.5em}
-        %     \begin{center}
-        %         \includegraphics[width=0.48\textwidth]{images/MERL_directions.jpg}
-        %         \includegraphics[width=0.48\textwidth]{images/bunny_normal.png}\\
-        %         \vspace{-0.5em}
-        %         \makebox[0.48\textwidth]{\scriptsize (a) Light source} 
-        %         \makebox[0.48\textwidth]{\scriptsize (b) {\sc Bunny}} 
-        %     \end{center}
-        % \end{minipage}
-        % \begin{minipage}[t]{0.76\textwidth}
-        %     \begin{center}
-        %         \includegraphics[width=\textwidth]{images/Bunny_100MERL.pdf}
-        %     \end{center}
-        % \end{minipage}
+         %tableau avec comparaison temps d'exec euler / Rk / implicit adams w/ adjoint
+         \textbf{\color{blue}Effect of ODE Solver (per batch, on a single A100):}
+         \vspace{-1.0em}
+         \begin{minipage}[t]{0.23\textwidth}
+             \begin{tabular}{|l||c|c|c|c|c|c|}
+                 \hline
+                 Solver & \multicolumn{2}{c|}{Euler} & \multicolumn{2}{c|}{RK4} & \multicolumn{2}{c|}{Implicit Adams} \\
+                 \hline
+                 Adjoints & w & w/o & w & w/o & w & w/o \\
+                 \hline\hline
+                 Time (s) & 0.27 & 0.18 & 0.34 & 0.31 & 0.69 & 0.45 \\ \hline
+                 VRAM (Gb) & 10.2 & 15.7 & 11.8 & 17.8 & 13.7 & 30.1 \\
+                 \hline
+             \end{tabular}
+
+         \end{minipage}
+
     }
     %
     \headerbox{\bf\color{blue} Critics}{name=critics,column=2,below=results,span=3}{
