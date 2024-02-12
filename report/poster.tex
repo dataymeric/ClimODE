@@ -9,7 +9,6 @@
 \usepackage{amssymb}
 \usepackage{relsize}
 \usepackage{multirow}
-\usepackage{booktabs}
 
 \usepackage{graphicx}
 \usepackage{multicol}
@@ -17,9 +16,7 @@
 \usepackage{ae}
 \usepackage{enumitem}
 
-\usepackage{caption}
-\usepackage{float}
-\usepackage{subcaption}
+\usepackage{booktabs}
 \usepackage{colortbl}
 \usepackage{xcolor}
 %\usepackage{gensymb} % for \degree
@@ -52,6 +49,8 @@
 \newcommand{\vM}{\mathbf{M}}
 \newcommand{\vN}{\mathbf{N}}
 \newcommand{\vL}{\mathbf{L}}
+
+\newcommand{\gradientcolor}[1]{\cellcolor{red!\the\numexpr80-#1*0.8\relax!yellow}}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Begin of Document
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -91,7 +90,7 @@
     % Authors
     {
         \vspace{0.3em} Aymeric Delefosse$^{1}$ \enspace Mathis Koroglu$^{1}$ \enspace Charles Vin$^{1}$ \enspace $|$ \enspace Yogesh Verma$^{2}$ \enspace Markus Heinonen$^{2}$ \enspace Vikas Garg$^{2}$ \\[0.2em]
-        \vspace{0.3em} $^{1}$Reviewers \enspace $^{2}$Original authors
+        \vspace{0.3em} \large $^{1}$Reviewers \enspace $^{2}$Original authors
     }
     % Other
     {
@@ -222,24 +221,30 @@
             \end{center}
         \end{minipage}
 
-
-         %tableau avec comparaison temps d'exec euler / Rk / implicit adams w/ adjoint
-         \textbf{\color{blue}Effect of ODE Solver (per batch, on a single A100):}
-         \vspace{-1.0em}
-         \begin{minipage}[t]{0.23\textwidth}
-             \begin{tabular}{|l||c|c|c|c|c|c|}
-                 \hline
-                 Solver & \multicolumn{2}{c|}{Euler} & \multicolumn{2}{c|}{RK4} & \multicolumn{2}{c|}{Implicit Adams} \\
-                 \hline
-                 Adjoints & w & w/o & w & w/o & w & w/o \\
-                 \hline\hline
-                 Time (s) & 0.27 & 0.18 & 0.34 & 0.31 & 0.69 & 0.45 \\ \hline
-                 VRAM (Gb) & 10.2 & 15.7 & 11.8 & 17.8 & 13.7 & 30.1 \\
-                 \hline
-             \end{tabular}
-
-         \end{minipage}
-
+        %tableau avec comparaison temps d'exec euler / Rk / implicit adams w/ adjoint
+        \begin{minipage}[t]{0.6\textwidth}
+            \vspace{0.5em}
+            \textbf{\color{blue}Effect of ODE Solver (per batch, on a single A100):}\\[0.2em]
+            % \begin{tabular}{|l||c|c|c|c|c|c|}
+            %     \hline
+            %     Solver    & \multicolumn{2}{c|}{Euler} & \multicolumn{2}{c|}{RK4} & \multicolumn{2}{c|}{Implicit Adams}                      \\
+            %     \hline
+            %     Adjoints  & w                          & w/o                      & w                                   & w/o  & w    & w/o  \\
+            %     \hline\hline
+            %     Time (s)  & 0.27                       & 0.18                     & 0.34                                & 0.31 & 0.69 & 0.45 \\ \hline
+            %     VRAM (Gb) & 10.2                       & 15.7                     & 11.8                                & 17.8 & 13.7 & 30.1 \\
+            %     \hline
+            % \end{tabular}
+            \begin{tabular}{lcccccc}
+                \hline
+                Solver & \multicolumn{2}{c}{Euler} & \multicolumn{2}{c}{RK4} & \multicolumn{2}{c}{Implicit Adams} \\
+                Adjoints & w & w/o & w & w/o & w & w/o \\
+                \hline
+                Time (s) & {\cellcolor[HTML]{FEDDBC}} \color[HTML]{000000} 0.27 & {\cellcolor[HTML]{FFF5EB}} \color[HTML]{000000} 0.18 & {\cellcolor[HTML]{FDBF86}} \color[HTML]{000000} 0.34 & {\cellcolor[HTML]{FDCFA0}} \color[HTML]{000000} 0.31 & {\cellcolor[HTML]{7F2704}} \color[HTML]{F1F1F1} 0.69 & {\cellcolor[HTML]{FA8532}} \color[HTML]{F1F1F1} 0.45 \\
+                VRAM (Gb) & {\cellcolor[HTML]{FFF5EB}} \color[HTML]{000000} 10.20 & {\cellcolor[HTML]{FDC997}} \color[HTML]{000000} 15.70 & {\cellcolor[HTML]{FEECD9}} \color[HTML]{000000} 11.80 & {\cellcolor[HTML]{FDAD69}} \color[HTML]{000000} 17.80 & {\cellcolor[HTML]{FEDDBC}} \color[HTML]{000000} 13.70 & {\cellcolor[HTML]{7F2704}} \color[HTML]{F1F1F1} 30.10 \\
+                \hline
+            \end{tabular}
+        \end{minipage}
     }
     %
     \headerbox{\bf\color{blue} Critics}{name=critics,column=2,below=results,span=3}{
