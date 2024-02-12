@@ -202,8 +202,9 @@
             \textbf{\color{blue}Quantitative Results and Comparison on ERA5:}
             \vspace{-0.5em}
             \begin{center}
-                \includegraphics[width=\textwidth]{acc.pdf}
-                \includegraphics[width=\textwidth]{rmse.pdf}
+                % \includegraphics[width=\textwidth]{acc.pdf}
+                % \includegraphics[width=\textwidth]{rmse.pdf}
+                \includegraphics[width=\textwidth]{acc_rmse.pdf}
             \end{center}
         \end{minipage}\hfill
         \begin{minipage}[t]{0.50\textwidth}
@@ -262,8 +263,8 @@
                 \item Concerns about data leakage
                 \item Absence of shuffling in original code - impact?
                 \item Unclear handling of residual architecture and dropout
-                \item Code quality critique: "Concerning coding standards"
-                \item Using Euler scheme to solve the ODE is known to be unstable but is good compromise in terms of accuracy and efficiency.
+                \item Code quality critique: Concerning coding standards
+                \item Using Euler scheme to solve the ODE is known to be unstable but is a good compromise in terms of accuracy and efficiency
             \end{itemize}
         \end{minipage}
     }
