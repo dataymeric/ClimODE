@@ -127,7 +127,7 @@
             \underbrace{\frac{du}{dt}}_{\text{time evolution }\dot u} + \underbrace{\overbrace{\mathbf{v} \cdot \nabla u}^{\text{transport}} + \overbrace{u \nabla \cdot \mathbf{v}}^{\text{compression}}}_{\text{advection}} = \underbrace{s}_{\text{sources}},
             \vspace{-0.5em}
         \end{equation*}
-        where $u(x, t)$ is a quantity evolving over space $\mathbf{x}$ and time $t$ driven by a flow's velocity $\mathbf{v}(\mathbf{x}, t)$.
+        where $u(\mathbf{x}, t)$ is a quantity evolving over space $\mathbf{x}$ and time $t$ driven by a flow's velocity $\mathbf{v}(\mathbf{x}, t)$.
 
         \textbf{\color{blue}Main Idea:} We solve the continuity equation over entire Earth as a system of neural ODEs. % We learn the flow $\mathbf{v}$ as a neural network that uses both global attention and local convolutions and address source variations via a probabilistic emission model that quantifies prediction uncertainties.
     }
