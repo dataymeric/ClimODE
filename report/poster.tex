@@ -67,8 +67,8 @@
         % Column spacing
         colspacing=0.7em,
         % Color style
-        headerColorOne=cyan!20!white!90!black, % changer les couleurs ?
-        borderColor=cyan!30!white!90!black,    % changer les couleurs ?
+        headerColorOne=cyan!20!white!90!black,
+        borderColor=cyan!30!white!90!black,
         % Format of textbox
         textborder=faded,
         % Format of text header
@@ -145,14 +145,6 @@
             \makebox[0.48\textwidth]{\small (b) {Advection ODE}}
             \vspace{-0.5em}
         \end{center}
-
-        % \begin{center}
-        %     % \hfill
-        %     % \includegraphics[width=0.5\textwidth]{AdvectionODE.pdf}
-        %     % \includegraphics[width=\textwidth]{pipeline.pdf}
-        % \end{center}
-        % \vspace{-0.5em}
-        %
         \textbf{\color{blue}Initial Velocity Inference:}
         \vspace{-0.5em}
         \begin{equation*}
@@ -217,7 +209,7 @@
             \textbf{\color{blue}Quantifying Climate Interdependencies:}
             \vspace{-0.5em}
             \begin{center}
-                \includegraphics[width=0.9\textwidth]{pairwise.pdf}
+                \includegraphics[width=0.88\textwidth]{pairwise.pdf}
             \end{center}
         \end{minipage}
 
@@ -226,10 +218,10 @@
             \textbf{\color{blue}Effect of ODE Solver (per batch, on a single A100):}\\[0.2em]
             \begin{tabular}{lcccccc}
                 \hline
-                Solver & \multicolumn{2}{c}{Euler} & \multicolumn{2}{c}{RK4} & \multicolumn{2}{c}{Implicit Adams} \\
-                Adjoints & w & w/o & w & w/o & w & w/o \\
+                Solver    & \multicolumn{2}{c}{Euler}                            & \multicolumn{2}{c}{RK4}                              & \multicolumn{2}{c}{Implicit Adams}                                                                                                                                                                                        \\
+                Adjoints  & w                                                    & w/o                                                  & w                                                    & w/o                                                  & w                                                    & w/o                                                  \\
                 \hline
-                Time (s) & {\cellcolor[HTML]{FEDDBC}} \color[HTML]{000000} 0.27 & {\cellcolor[HTML]{FFF5EB}} \color[HTML]{000000} 0.18 & {\cellcolor[HTML]{FDBF86}} \color[HTML]{000000} 0.34 & {\cellcolor[HTML]{FDCFA0}} \color[HTML]{000000} 0.31 & {\cellcolor[HTML]{7F2704}} \color[HTML]{F1F1F1} 0.69 & {\cellcolor[HTML]{FA8532}} \color[HTML]{F1F1F1} 0.45 \\
+                Time (s)  & {\cellcolor[HTML]{FEDDBC}} \color[HTML]{000000} 0.27 & {\cellcolor[HTML]{FFF5EB}} \color[HTML]{000000} 0.18 & {\cellcolor[HTML]{FDBF86}} \color[HTML]{000000} 0.34 & {\cellcolor[HTML]{FDCFA0}} \color[HTML]{000000} 0.31 & {\cellcolor[HTML]{7F2704}} \color[HTML]{F1F1F1} 0.69 & {\cellcolor[HTML]{FA8532}} \color[HTML]{F1F1F1} 0.45 \\
                 VRAM (Gb) & {\cellcolor[HTML]{FFF5EB}} \color[HTML]{000000} 10.2 & {\cellcolor[HTML]{FDC997}} \color[HTML]{000000} 15.7 & {\cellcolor[HTML]{FEECD9}} \color[HTML]{000000} 11.8 & {\cellcolor[HTML]{FDAD69}} \color[HTML]{000000} 17.8 & {\cellcolor[HTML]{FEDDBC}} \color[HTML]{000000} 13.7 & {\cellcolor[HTML]{7F2704}} \color[HTML]{F1F1F1} 30.1 \\
                 \hline
             \end{tabular}
@@ -251,7 +243,7 @@
                 \item Lacks comparison to other models, such as FourCastNet, FuXi or Pangu-Weather (WeatherBench2)
                 \item Is the comparison against ClimaX fair?
                 \item Benchmark only up to 36 hours while state-of-the-art methods reported results for up to 10 days ahead
-                \item Why choose ResNet over U-Net to model Gaussian prior for capturing both aleatoric and epistemic variance in the Emission Model?
+                \item Why choose ResNet over U-Net in the Emission Model? % to model Gaussian prior for capturing both aleatoric and epistemic variance 
             \end{itemize}
         \end{minipage}\hfill\begin{minipage}[t]{0.48\textwidth}
             \textbf{\color{blue}Implementation (original code):}
