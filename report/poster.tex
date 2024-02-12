@@ -137,7 +137,7 @@
     \headerbox{\bf\color{blue} Method}{name=abstract,column=0,below=formulation,span=2}{
         \textbf{\color{blue}Network Architecture:}
         Spatiotemporal embedding $\psi$ encodes time and location information to capture cyclical patterns of day and season.
-        \vspace{-1em}
+        \vspace{-0.88em}
         \begin{center}
             \includegraphics[width=0.48\textwidth]{ClimODE.pdf}
             \includegraphics[width=0.48\textwidth]{AdvectionODE.pdf}\\
@@ -148,7 +148,7 @@
         \textbf{\color{blue}Initial Velocity Inference:}
         \vspace{-0.5em}
         \begin{equation*}
-            \hat{\mathbf{v}}_{k}(t) = \argmin_{\hat{\mathbf{v}}_{k}(t)} \left\{ \big\Vert \tilde{\dot{u}}_k(t) + \mathbf{v}_{k}(t) \cdot \tilde{\nabla}u_k(t) + u_k(t) \tilde{\nabla} \cdot \mathbf{v}_k(x,t) \big\Vert_2^2 + \alpha \big\Vert \mathbf{v}_k(t) \big\Vert \right\}
+            \hat{\mathbf{v}}_{k}(t) = \argmin_{\hat{\mathbf{v}}_{k}(t)} \left\{ \big\Vert \tilde{\dot{u}}_k(t) + \mathbf{v}_{k}(t) \cdot \tilde{\nabla}u_k(t) + u_k(t) \tilde{\nabla} \cdot \mathbf{v}_k(\mathbf{x},t) \big\Vert_2^2 + \alpha \big\Vert \mathbf{v}_k(t) \big\Vert \right\}
         \end{equation*}
         %
         \textbf{\color{blue}Advection ODE:} Modeling the dynamic evolution of quantities at specific locations by transforming second-order PDEs into first-order ODEs:
@@ -162,7 +162,7 @@
         \textbf{\color{blue}Flow Velocity:} Modeling local and global effects using a hybrid network:
         \vspace{-0.5em}
         \begin{equation*}
-            \dot{\mathbf{v}}_k(x,t) = f_{\text{conv}} \left( \mathbf{u}(t), \nabla \mathbf{u}(t), \mathbf{v}(t), \psi \right) + \gamma f_{\text{att}} \left( \mathbf{u}(t), \nabla \mathbf{u}(t), \mathbf{v}(t), \psi \right) % f_{\theta}(\mathbf{u}(t), \nabla \mathbf{u}(t), \mathbf{v}(t), \psi) 
+            \dot{\mathbf{v}}_k(\mathbf{x},t) = f_{\text{conv}} \left( \mathbf{u}(t), \nabla \mathbf{u}(t), \mathbf{v}(t), \psi \right) + \gamma f_{\text{att}} \left( \mathbf{u}(t), \nabla \mathbf{u}(t), \mathbf{v}(t), \psi \right) % f_{\theta}(\mathbf{u}(t), \nabla \mathbf{u}(t), \mathbf{v}(t), \psi) 
         \end{equation*}
         %
         \textbf{\color{blue}Emission Model:} Accounting for uncertainty and value changes in climate estimates:
@@ -249,7 +249,7 @@
             \textbf{\color{blue}Implementation (original code):}
             \begin{itemize}
                 \item Concerns about data leakage
-                \item Absence of shuffling during training - impact?
+                \item Absence of shuffling during training: impact?
                 \item Unclear handling of residual architecture and dropout
                 \item Code quality critique: Concerning coding standards
                 \item Using Euler scheme to solve the ODE is known to be unstable but is a good compromise in terms of accuracy and efficiency
