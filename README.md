@@ -13,7 +13,7 @@ By reimagining the original PyTorch code within the PyTorch-Ignite framework, we
 - **Framework Migration**: Transitioned the plain PyTorch codebase to the PyTorch-Ignite framework.
 - **Distributed Training**: Enabled the use of distributed training for improved scalability.
 - **Enhanced Readability**: Implemented coding standards, such as GitHub pre-commit hooks and EditorConfig, from the project's inception to ensure codebase consistency and readability.
-- **Collaborative Tools**: Employed collaborative tools like GitHub pre-commit hooks and EditorConfig to foster effective collaboration and maintain codebase cleanliness.
+- **Collaborative Tools**: Employed collaborative tools like [Notion](https://charlesattend.notion.site/Coming-soon-ClimODE-Notion-beb1e205faea4964b6f96b87c1af27e2?pvs=4), GitHub pre-commit hooks and EditorConfig to foster effective collaboration and maintain codebase cleanliness.
 
 ## Acknowledgements
 
