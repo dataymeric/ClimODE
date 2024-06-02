@@ -1,6 +1,6 @@
 # ClimODE: Climate Forecasting With Physics-informed Neural ODEs
 
-This repository is a reimplementation of the groundbreaking work [ClimODE](https://yogeshverma1998.github.io/ClimODE/) presented in the [ICLR 2024 Paper](https://openreview.net/forum?id=xuY33XhEGR) by Yogesh Verma, Markus Heinonen, and Vikas Garg. The original paper explores the application of Physics-informed Neural Ordinary Differential Equations (ODEs) for climate forecasting.
+This repository is a reimplementation of the work [ClimODE](https://yogeshverma1998.github.io/ClimODE/) presented in the [ICLR 2024 Paper](https://openreview.net/forum?id=xuY33XhEGR) by Yogesh Verma, Markus Heinonen, and Vikas Garg. The original paper explores the application of Physics-informed Neural Ordinary Differential Equations (ODEs) for climate forecasting.
 
 ![ClimODE Pipeline](report/figs/pipeline.jpg)
 
